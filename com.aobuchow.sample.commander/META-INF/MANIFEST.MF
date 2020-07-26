@@ -24,7 +24,8 @@ Require-Bundle: javax.inject,
  org.eclipse.ui.workbench;bundle-version="3.119.0",
  org.eclipse.ui.workbench.texteditor;bundle-version="3.14.200",
  org.eclipse.egit.core;bundle-version="5.8.0",
- org.eclipse.egit.ui;bundle-version="5.8.0"
+ org.eclipse.egit.ui;bundle-version="5.8.0",
+ org.eclipse.core.resources;bundle-version="3.13.700"
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Automatic-Module-Name: com.aobuchow.sample.commander
 Import-Package: javax.annotation;version="1.2.0"

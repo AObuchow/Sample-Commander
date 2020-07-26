@@ -10,5 +10,14 @@
             uri="fragment.e4xmi">
       </fragment>
    </extension>
+   <extension
+         point="org.eclipse.core.contenttype.contentTypes">
+      <content-type
+            file-extensions=".mp3, .wav"
+            id="com.aobuchow.sample.commander.content.type.audioFile"
+            name="Audio File"
+            priority="high">
+      </content-type>
+   </extension>
 
 </plugin>
