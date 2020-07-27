@@ -1,13 +1,12 @@
 package com.aobuchow.sample.commander.parts;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -16,13 +15,9 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.ui.di.Focus;
-import org.eclipse.e4.ui.services.IServiceConstants;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
@@ -35,17 +30,13 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IPropertyListener;
-import org.eclipse.ui.ISelectionListener;
-import org.eclipse.ui.IWorkbenchPart;
-import org.eclipse.ui.IWorkbenchPartSite;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.EditorPart;
 
 import com.aobuchow.sample.commander.resources.AudioFile;
 
 // TODO: Rename to FileMangerEditor
-public class FileManagerView extends EditorPart implements IEditorPart, ISelectionListener  {
+public class FileManagerView extends EditorPart implements IEditorPart {
 
 	private TableViewer viewer;
 	private Object[] model;
@@ -55,34 +46,29 @@ public class FileManagerView extends EditorPart implements IEditorPart, ISelecti
 	@PostConstruct
 	@Override
 	public void createPartControl(Composite parent) {
-
-		viewer = new TableViewer(parent, SWT.BORDER | SWT.FULL_SELECTION);
-		viewer.setContentProvider(ArrayContentProvider.getInstance());
-		viewer.setComparator(new ResourceComparator());
+		this.viewer = new TableViewer(parent, SWT.BORDER | SWT.FULL_SELECTION);
+		this.viewer.setContentProvider(ArrayContentProvider.getInstance());
+		this.viewer.setComparator(new ResourceComparator());
 		TableViewerColumn column = createColumnFor(viewer, "File");
 		column.setLabelProvider(new ColumnLabelProvider() {
-
 			@Override
 			public String getText(Object element) {
 				if (element instanceof AudioFile) {
-					return ((AudioFile) element).getName();	
+					return ((AudioFile) element).getName();
 				}
 				if (element instanceof IFolder) {
 					return "/" + ((IFolder) element).getName() + "/";
 				}
 				return "null";
 			}
-
 		});
-		viewer.getTable().setLinesVisible(true);
-		viewer.getTable().setHeaderVisible(true);
-		viewer.setInput(model);
+		this.viewer.getTable().setLinesVisible(true);
+		this.viewer.getTable().setHeaderVisible(true);
+		this.viewer.setInput(model);
 
-		
 		this.titleName = inputFile.getParent().getName();
 		this.setPartName(titleName);
 		super.firePropertyChange(PROP_TITLE);
-		
 	}
 
 	private TableViewerColumn createColumnFor(TableViewer viewer, String label) {
@@ -92,7 +78,7 @@ public class FileManagerView extends EditorPart implements IEditorPart, ISelecti
 		column.getColumn().setMoveable(true);
 		return column;
 	}
-	
+
 	public static Object resourceConverter(IResource resource) {
 		if (resource.getType() == IResource.FOLDER) {
 			return Adapters.adapt(resource, IFolder.class);
@@ -100,13 +86,14 @@ public class FileManagerView extends EditorPart implements IEditorPart, ISelecti
 			return new AudioFile(resource);
 		}
 	}
-	
+
 	public class ResourceComparator extends ViewerComparator {
 		@Override
 		public int compare(Viewer viewer, Object e1, Object e2) {
 			// both are folders, sort alphabetically
 			if (e1 instanceof IFolder && e2 instanceof IFolder) {
-				return Comparator.comparing(IFolder::getName, String.CASE_INSENSITIVE_ORDER).compare((IFolder) e1, (IFolder) e2);
+				return Comparator.comparing(IFolder::getName, String.CASE_INSENSITIVE_ORDER).compare((IFolder) e1,
+						(IFolder) e2);
 			}
 			// one is audio file, one is folder, folder goes first
 			if (!e1.getClass().equals(e2.getClass())) {
@@ -116,18 +103,19 @@ public class FileManagerView extends EditorPart implements IEditorPart, ISelecti
 					return 1;
 				}
 			}
-			
+
 			// both are audio files, sort alphabetically
 			if (e1 instanceof AudioFile && e2 instanceof AudioFile) {
-				return Comparator.comparing(AudioFile::getName, String.CASE_INSENSITIVE_ORDER).compare((AudioFile) e1, (AudioFile) e2);
+				return Comparator.comparing(AudioFile::getName, String.CASE_INSENSITIVE_ORDER).compare((AudioFile) e1,
+						(AudioFile) e2);
 			}
 			return 0;
 		}
 	}
 
-	// TODO: Refactor this 
+	// TODO: Refactor this
 	private Object[] createModel(IResource o) throws CoreException {
-		Collection<Object> filesInSelectedDir = null;
+		Collection<Object> filesInSelectedDir = new ArrayList<Object>();
 		IFolder parentFolder;
 		if (!o.isAccessible()) {
 			return null;
@@ -138,10 +126,9 @@ public class FileManagerView extends EditorPart implements IEditorPart, ISelecti
 					.collect(Collectors.toList());
 		} else if (o instanceof IFolder) {
 			parentFolder = Adapters.adapt(o, IFolder.class);
-		
-				filesInSelectedDir = Arrays.asList(parentFolder.members()).stream().map(FileManagerView::resourceConverter)
-						.collect(Collectors.toList());				
-			
+
+			filesInSelectedDir = Arrays.asList(parentFolder.members()).stream().map(FileManagerView::resourceConverter)
+					.collect(Collectors.toList());
 
 		} else if (o instanceof IFile) {
 			parentFolder = Adapters.adapt(o.getParent(), IFolder.class);
@@ -150,13 +137,12 @@ public class FileManagerView extends EditorPart implements IEditorPart, ISelecti
 				filesInSelectedDir = Arrays.asList(project.members()).stream().map(FileManagerView::resourceConverter)
 						.collect(Collectors.toList());
 			} else {
-				filesInSelectedDir = Arrays.asList(parentFolder.members()).stream().map(FileManagerView::resourceConverter)
-						.collect(Collectors.toList());
+				filesInSelectedDir = Arrays.asList(parentFolder.members()).stream()
+						.map(FileManagerView::resourceConverter).collect(Collectors.toList());
 			}
 		}
 
 		return filesInSelectedDir.stream().toArray(Object[]::new);
-
 	}
 
 	@Focus
@@ -164,85 +150,14 @@ public class FileManagerView extends EditorPart implements IEditorPart, ISelecti
 
 	}
 
-	/**
-	 * This method is kept for E3 compatiblity. You can remove it if you do not mix
-	 * E3 and E4 code. <br/>
-	 * With E4 code you will set directly the selection in ESelectionService and you
-	 * do not receive a ISelection
-	 * 
-	 * @param s the selection received from JFace (E3 mode)
-	 */
-	@Inject
-	@Optional
-	public void setSelection(@Named(IServiceConstants.ACTIVE_SELECTION) ISelection s) {
-		if (s == null || s.isEmpty())
-			return;
-
-		if (s instanceof IStructuredSelection) {
-			IStructuredSelection iss = (IStructuredSelection) s;
-			if (iss.size() == 1)
-				setSelection(iss.getFirstElement());
-			else
-				setSelection(iss.toArray());
-		}
-	}
-
-	/**
-	 * This method manages the selection of your current object. In this example we
-	 * listen to a single Object (even the ISelection already captured in E3 mode).
-	 * <br/>
-	 * You should change the parameter type of your received Object to manage your
-	 * specific selection
-	 * 
-	 * @param o : the current object received
-	 */
-	@Inject
-	@Optional
-	public void setSelection(@Named(IServiceConstants.ACTIVE_SELECTION) Object o) {
-		// Test if viewer exists (inject methods are called before PostConstruct)
-		if (viewer != null && o instanceof IResource) {
-			if (viewer.getControl().isDisposed()) {
-				createPartControl(viewer.getControl().getParent());
-			}
-			try {
-				viewer.setInput(createModel((IResource) o));
-			} catch (CoreException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-
-	}
-
-	/**
-	 * This method manages the multiple selection of your current objects. <br/>
-	 * You should change the parameter type of your array of Objects to manage your
-	 * specific selection
-	 * 
-	 * @param o : the current array of objects received in case of multiple
-	 *          selection
-	 */
-	@Inject
-	@Optional
-	public void setSelection(@Named(IServiceConstants.ACTIVE_SELECTION) Object[] selectedObjects) {
-		// Test if label exists (inject methods are called before PostConstruct)
-		if (viewer != null) {
-
-		}
-	}
-
 	@Override
 	public void addPropertyListener(IPropertyListener listener) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void dispose() {
 		viewer.getControl().dispose();
-		
 	}
-
 
 	@Override
 	public String getTitle() {
@@ -251,55 +166,47 @@ public class FileManagerView extends EditorPart implements IEditorPart, ISelecti
 
 	@Override
 	public Image getTitleImage() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public String getTitleToolTip() {
-		// TODO Auto-generated method stub
+		// TODO: Return full path of the folder
 		return null;
 	}
 
 	@Override
 	public void removePropertyListener(IPropertyListener listener) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public <T> T getAdapter(Class<T> adapter) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public void doSave(IProgressMonitor monitor) {
-		// TODO Auto-generated method stub
-		
+		// TODO: Should refresh the project
 	}
 
 	@Override
 	public void doSaveAs() {
-		// TODO Auto-generated method stub
-		
+		// Disabled
 	}
 
 	@Override
 	public boolean isDirty() {
-		// TODO Auto-generated method stub
+		// TODO: Return whether a file operation has occured in this directory
 		return false;
 	}
 
 	@Override
 	public boolean isSaveAsAllowed() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean isSaveOnCloseNeeded() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -310,9 +217,9 @@ public class FileManagerView extends EditorPart implements IEditorPart, ISelecti
 
 	@Override
 	public IEditorSite getEditorSite() {
-		return  this.getSite();
+		return this.getSite();
 	}
-	
+
 	@Override
 	public IEditorSite getSite() {
 		return (IEditorSite) super.getSite();
@@ -325,26 +232,11 @@ public class FileManagerView extends EditorPart implements IEditorPart, ISelecti
 			inputFile = ((IFileEditorInput) input).getFile();
 			this.model = createModel(inputFile);
 		} catch (CoreException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		createPartControl(site.getShell());
 		setSite(site);
 		setInput(input);
-
-
-
-		//PlatformUI.getWorkbench().getActiveWorkbenchWindow().getSelectionService().addSelectionListener(this);
-
-		
-		//this.setSelection(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getSelectionService().getSelection());
-		
 	}
-	
 
-	@Override
-	public void selectionChanged(IWorkbenchPart part, ISelection selection) {
-		this.setSelection(selection);
-		
-	}
 }

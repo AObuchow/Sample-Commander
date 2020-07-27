@@ -15,7 +15,6 @@ public class FileManagerMatchingStrategy implements IEditorMatchingStrategy {
 		try {
 			 refParent = ((IFileEditorInput) editorRef.getEditorInput()).getFile().getParent();
 		} catch (PartInitException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
