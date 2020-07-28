@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -12,6 +13,10 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceChangeEvent;
+import org.eclipse.core.resources.IResourceChangeListener;
+import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -25,28 +30,32 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IPropertyListener;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.actions.DeleteResourceAction;
 import org.eclipse.ui.part.EditorPart;
+import org.eclipse.ui.part.FileEditorInput;
 
 import com.aobuchow.sample.commander.resources.AudioFile;
 
-// TODO: Rename to FileMangerEditor
-public class FileManagerView extends EditorPart implements IEditorPart {
+public class FileManagerEditor extends EditorPart implements IEditorPart {
 
 	private TableViewer viewer;
 	private Object[] model;
 	private String titleName = null;
-	private IFile inputFile;
+	private IFile inputFile = null;
+	private IWorkspace workspace;
+	private IResourceChangeListener workspaceChangeListener;
 
 	@PostConstruct
 	@Override
 	public void createPartControl(Composite parent) {
-		this.viewer = new TableViewer(parent, SWT.BORDER | SWT.FULL_SELECTION);
+		this.viewer = new TableViewer(parent, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 		this.viewer.setContentProvider(ArrayContentProvider.getInstance());
 		this.viewer.setComparator(new ResourceComparator());
 		TableViewerColumn column = createColumnFor(viewer, "File");
@@ -62,6 +71,7 @@ public class FileManagerView extends EditorPart implements IEditorPart {
 				return "null";
 			}
 		});
+
 		this.viewer.getTable().setLinesVisible(true);
 		this.viewer.getTable().setHeaderVisible(true);
 		this.viewer.setInput(model);
@@ -69,6 +79,9 @@ public class FileManagerView extends EditorPart implements IEditorPart {
 		this.titleName = inputFile.getParent().getName();
 		this.setPartName(titleName);
 		super.firePropertyChange(PROP_TITLE);
+
+		// org.eclipse.ui.IWorkbenchCommandConstants.EDIT_DELETE
+
 	}
 
 	private TableViewerColumn createColumnFor(TableViewer viewer, String label) {
@@ -122,23 +135,23 @@ public class FileManagerView extends EditorPart implements IEditorPart {
 		}
 		if (o instanceof IProject) {
 			IProject project = Adapters.adapt(o, IProject.class);
-			filesInSelectedDir = Arrays.asList(project.members()).stream().map(FileManagerView::resourceConverter)
+			filesInSelectedDir = Arrays.asList(project.members()).stream().map(FileManagerEditor::resourceConverter)
 					.collect(Collectors.toList());
 		} else if (o instanceof IFolder) {
 			parentFolder = Adapters.adapt(o, IFolder.class);
 
-			filesInSelectedDir = Arrays.asList(parentFolder.members()).stream().map(FileManagerView::resourceConverter)
-					.collect(Collectors.toList());
+			filesInSelectedDir = Arrays.asList(parentFolder.members()).stream()
+					.map(FileManagerEditor::resourceConverter).collect(Collectors.toList());
 
 		} else if (o instanceof IFile) {
 			parentFolder = Adapters.adapt(o.getParent(), IFolder.class);
 			if (parentFolder == null) {
 				IProject project = Adapters.adapt(o.getProject(), IProject.class);
-				filesInSelectedDir = Arrays.asList(project.members()).stream().map(FileManagerView::resourceConverter)
+				filesInSelectedDir = Arrays.asList(project.members()).stream().map(FileManagerEditor::resourceConverter)
 						.collect(Collectors.toList());
 			} else {
 				filesInSelectedDir = Arrays.asList(parentFolder.members()).stream()
-						.map(FileManagerView::resourceConverter).collect(Collectors.toList());
+						.map(FileManagerEditor::resourceConverter).collect(Collectors.toList());
 			}
 		}
 
@@ -157,6 +170,7 @@ public class FileManagerView extends EditorPart implements IEditorPart {
 	@Override
 	public void dispose() {
 		viewer.getControl().dispose();
+		workspace.removeResourceChangeListener(workspaceChangeListener);
 	}
 
 	@Override
@@ -227,16 +241,72 @@ public class FileManagerView extends EditorPart implements IEditorPart {
 
 	@Override
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
-		inputFile = null;
 		try {
-			inputFile = ((IFileEditorInput) input).getFile();
+			setInputFile(((IFileEditorInput) input).getFile());
 			this.model = createModel(inputFile);
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
-		createPartControl(site.getShell());
 		setSite(site);
-		setInput(input);
+		//setInput is called in setInputFile
+		createPartControl(site.getShell());
+
+		workspace = ResourcesPlugin.getWorkspace();
+		workspaceChangeListener = event -> {
+			switch (event.getType()) {
+			case IResourceChangeEvent.PRE_DELETE:
+				if (event.getResource().equals(inputFile)) {
+					this.changeEditorInput();
+				}
+				break;
+			case IResourceChangeEvent.POST_CHANGE:
+				this.refresh();
+				break;
+			}
+		};
+		workspace.addResourceChangeListener(workspaceChangeListener);
+	}
+
+	private void changeEditorInput() {
+		Object[] input = (Object[]) this.viewer.getInput(); 
+		List<AudioFile> audioFilesInDir = Arrays.asList(input).stream().filter(obj -> obj instanceof AudioFile)
+				.map(obj -> (AudioFile) obj).filter(audioFile -> audioFile.exists()).collect(Collectors.toList());
+		if (audioFilesInDir.size() > 0) {
+			this.setInputFile(audioFilesInDir.get(0));
+		}
+	}
+
+	private void setInputFile(IFile inputFile) {
+		this.inputFile = inputFile;
+		setInput(new FileEditorInput(inputFile));
+	}
+
+	public void delete() {
+		if (this.viewer.getStructuredSelection().toList().stream().anyMatch(sel -> {
+			IFile selectedFile = Adapters.adapt(sel, IFile.class);
+			return selectedFile.equals(inputFile);
+		})) {
+			changeEditorInput();
+		}
+
+		DeleteResourceAction action = new DeleteResourceAction(getSite());
+		action.selectionChanged(this.viewer.getStructuredSelection());
+		action.run();
+	}
+
+	public void refresh() {
+		if (!this.inputFile.exists()) {
+			changeEditorInput();
+		}
+		if (this.viewer == null) {
+			return;
+		}
+		try {
+			this.model = createModel(inputFile);
+			viewer.getControl().getDisplay().asyncExec(() -> this.viewer.setInput(model));
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

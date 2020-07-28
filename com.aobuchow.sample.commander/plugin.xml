@@ -22,14 +22,14 @@
    <extension
          point="org.eclipse.ui.editors">
       <editor
-            class="com.aobuchow.sample.commander.parts.FileManagerView"
+            class="com.aobuchow.sample.commander.parts.FileManagerEditor"
             contributorClass="com.aobuchow.sample.commander.parts.FileManagerActionBar"
             default="true"
             extensions="mp3, wav"
             icon="icons/AudioFile3_16.png"
             id="com.aobuchow.sample.commander.editor1"
             matchingStrategy="com.aobuchow.sample.commander.parts.FileManagerMatchingStrategy"
-            name="name">
+            name="File Manager">
          <contentTypeBinding
                contentTypeId="com.aobuchow.sample.commander.content.type.audioFile">
          </contentTypeBinding>
@@ -37,6 +37,25 @@
                contentTypeId="com.aobuchow.sample.commander.contentTypeBinding1">
          </contentTypeBinding>
       </editor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            class="com.aobuchow.sample.commander.parts.SampleDeleteHandler"
+            commandId="org.eclipse.ui.edit.delete">
+         <activeWhen>
+			<with variable="activeEditorId">
+       			 <equals value="com.aobuchow.sample.commander.editor1"/>
+   			 </with>         
+   		</activeWhen>
+         <class
+               class="com.aobuchow.sample.commander.parts.SampleDeleteHandler">
+            <parameter
+                  name="com.aobuchow.sample.commander.parameter1"
+                  value="com.aobuchow.sample.commander.parameter1">
+            </parameter>
+         </class>
+      </handler>
    </extension>
 
 </plugin>
