@@ -1,0 +1,22 @@
+<project>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.aobuchow.sample.commander</groupId>
+	<artifactId>root</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+	<parent>
+		<groupId>com.aobuchow.sample.commander</groupId>
+		<artifactId>releng</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+		<relativePath>./releng</relativePath>
+	</parent>
+
+	<modules>
+		<module>com.aobuchow.sample.commander</module>
+		<module>com.aobuchow.sample.commander.feature</module>
+		<module>com.aobuchow.sample.commander.tests</module>
+		<module>releng-updatesite</module>
+	</modules>
+
+</project>
