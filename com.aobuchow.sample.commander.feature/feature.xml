@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="com.aobuchow.sample.commander.feature"
+      label="%featureName"
+      version="1.0.0.qualifier"
+      provider-name="aobuchow"
+      license-feature="org.eclipse.license"
+      license-feature-version="0.0.0">
+
+   <description url="%featureURL">
+      %featureDescription
+   </description>
+
+   <copyright>
+      %copyright
+   </copyright>
+
+   <license url="%licenseURL">
+      %license
+   </license>
+
+   <plugin
+         id="com.aobuchow.sample.commander"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>

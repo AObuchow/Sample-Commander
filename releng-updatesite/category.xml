@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature id="com.aobuchow.sample.commander.feature">
+      <category name="com.aobuchow.sample.commander.update"/>
+   </feature>
+   <category-def name="com.aobuchow.sample.commander.update" label="Sample Commander">
+      <description>
+         Sample Commander by Andrew Obuchowicz.
+      </description>
+   </category-def>
+</site>

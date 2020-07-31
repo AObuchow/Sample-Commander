@@ -32,3 +32,12 @@ Bundle-RequiredExecutionEnvironment: JavaSE-11
 Automatic-Module-Name: com.aobuchow.sample.commander
 Import-Package: javax.annotation;version="1.2.0"
 Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: .,
+ lib/java-stream-player-10.0.2.jar
+Export-Package: com.aobuchow.sample.commander;x-internal:=true,
+ com.aobuchow.sample.commander.parts;x-internal:=true,
+ com.aobuchow.sample.commander.resources;x-internal:=true,
+ com.goxr3plus.streamplayer.application;x-internal:=true,
+ com.goxr3plus.streamplayer.enums;x-internal:=true,
+ com.goxr3plus.streamplayer.stream;x-internal:=true,
+ com.goxr3plus.streamplayer.tools;x-internal:=true
