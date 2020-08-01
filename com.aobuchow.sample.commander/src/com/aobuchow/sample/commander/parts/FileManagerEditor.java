@@ -41,6 +41,7 @@ import org.eclipse.ui.actions.DeleteResourceAction;
 import org.eclipse.ui.part.EditorPart;
 import org.eclipse.ui.part.FileEditorInput;
 
+import com.aobuchow.sample.commander.Activator;
 import com.aobuchow.sample.commander.resources.AudioFile;
 
 public class FileManagerEditor extends EditorPart implements IEditorPart {
@@ -66,12 +67,20 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 					return ((AudioFile) element).getName();
 				}
 				if (element instanceof IFolder) {
+					// TODO: Should use a folder icon instead...
 					return "/" + ((IFolder) element).getName() + "/";
 				}
 				return "null";
 			}
 		});
-
+		
+		this.viewer.addSelectionChangedListener((event) -> {
+			// TODO: Only play when selection length == 1
+			AudioFile selectedFile = (AudioFile) event.getStructuredSelection().getFirstElement();
+			if ( selectedFile instanceof AudioFile) {
+				Activator.getDefault().getAudioPlayer().play( selectedFile);
+			}
+		});
 		this.viewer.getTable().setLinesVisible(true);
 		this.viewer.getTable().setHeaderVisible(true);
 		this.viewer.setInput(model);
