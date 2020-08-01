@@ -20,6 +20,7 @@ public class Activator implements BundleActivator {
 	private AudioPlayer audioPlayer;
 	private static ExecutorService streamPlayerExecutor;
 	private static ExecutorService streamPlayerEventExecutor;
+	private FileClipBoard clipboard;
 
 	static BundleContext getContext() {
 		return context;
@@ -30,14 +31,15 @@ public class Activator implements BundleActivator {
 		plugin = this;
 		Display.getDefault().asyncExec(() -> {
 			audioPlayer = newAudioPlayer();	
-			
 		});
+		clipboard = new FileClipBoard(Display.getDefault());
 	}
 
 	public void stop(BundleContext bundleContext) throws Exception {
 		plugin = null;
 		Activator.context = null;
 		shutdownAudioPlayer();
+		clipboard.dispose();
 	}
 
 	public AudioPlayer getAudioPlayer() {
@@ -66,6 +68,10 @@ public class Activator implements BundleActivator {
 		streamPlayerEventExecutor = Executors
 				.newSingleThreadExecutor(new ThreadFactoryWithNamePrefix("StreamPlayerEvent"));
 		return new AudioPlayer(mutedLoger, streamPlayerExecutor, streamPlayerEventExecutor);
+	}
+
+	public FileClipBoard getClipboard() {
+		return clipboard;
 	}
 
 }
