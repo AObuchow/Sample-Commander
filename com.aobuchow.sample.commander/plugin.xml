@@ -181,7 +181,7 @@
    <extension
          point="org.eclipse.ui.commands">
       <command
-            name="Open Folder "
+            name="Open Folder"
             description="Open a Folder in a Sample Commander File Manager"
             categoryId="org.eclipse.ui.category.navigate"
             id="com.aobuchow.sample.commander.commands.openContainerResource"

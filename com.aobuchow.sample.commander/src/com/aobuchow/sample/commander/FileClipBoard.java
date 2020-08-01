@@ -21,7 +21,9 @@ public class FileClipBoard {
 	}
 
 	public void dispose() {
-		clipboard.dispose();
+		if (!clipboard.isDisposed()) {
+			clipboard.dispose();	
+		}
 	}
 
 	public void copy(IResource[] resourcesToCopy) {

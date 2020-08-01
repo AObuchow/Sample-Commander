@@ -6,6 +6,7 @@ import org.eclipse.ui.IEditorMatchingStrategy;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.part.FileEditorInput;
 
 public class FileManagerMatchingStrategy implements IEditorMatchingStrategy {
 
@@ -15,7 +16,10 @@ public class FileManagerMatchingStrategy implements IEditorMatchingStrategy {
 		if (input == null) {
 			return false;
 		}
-		if (!editorRef.getTitle().equals(input.getName())) {
+		String inputName = input instanceof FileEditorInput ? ((FileEditorInput) input).getFile().getParent().getName() : input.getName();
+
+		 
+		if (!editorRef.getTitle().equals(inputName)) {
 			return false;
 		}
 		try {
