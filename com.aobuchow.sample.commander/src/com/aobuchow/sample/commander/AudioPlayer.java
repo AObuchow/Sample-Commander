@@ -1,6 +1,5 @@
 package com.aobuchow.sample.commander;
 
-import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 
@@ -34,7 +33,6 @@ public class AudioPlayer extends StreamPlayer {
 
 	public static boolean canPlay(AudioFile file) {
 		// TODO: Don't use internal API?
-		
 		if (!(file.exists())) {
 			return false;
 		}

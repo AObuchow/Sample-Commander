@@ -12,13 +12,25 @@ public class FileManagerMatchingStrategy implements IEditorMatchingStrategy {
 	@Override
 	public boolean matches(IEditorReference editorRef, IEditorInput input) {
 		IContainer refParent = null;
+		if (input == null) {
+			return false;
+		}
+		if (!editorRef.getTitle().equals(input.getName())) {
+			return false;
+		}
 		try {
-			 refParent = ((IFileEditorInput) editorRef.getEditorInput()).getFile().getParent();
+			 refParent = ((IContainerEditorInput) editorRef.getEditorInput()).getContainer();
 		} catch (PartInitException e) {
 			e.printStackTrace();
 			return false;
 		}
-		IContainer inputParent =  ((IFileEditorInput) input).getFile().getParent();
+		IContainer inputParent = null;
+		if ((input instanceof IFileEditorInput)) {
+			inputParent = ((IFileEditorInput) input).getFile().getParent();
+		} else {
+			inputParent =  ((IContainerEditorInput) input).getContainer();	
+		}
+		 
 		
 		if (refParent == null || inputParent == null) {
 			return false;

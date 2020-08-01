@@ -20,6 +20,33 @@
       </content-type>
    </extension>
    <extension
+         point="org.eclipse.core.expressions.definitions">
+      <definition
+            id="org.eclipse.ui.ide.showInDefinition">
+            <or>
+            <with variable="selection">
+                    <count value="1" />
+                    <iterate ifEmpty="false">
+                        <adapt type="org.eclipse.core.resources.IFolder" />
+                    </iterate>
+             </with>
+            <with
+                  variable="activePart">
+               <test
+                     property="org.eclipse.ui.ide.editor.input">
+               </test>
+            </with>
+            <with
+                  variable="activeShell">
+               <test
+                     property="org.eclipse.ui.ide.page.activePreferencePage"
+                     value="org.eclipse.ui.internal.ide.dialogs.ResourceInfoPage">
+               </test>
+            </with>
+             </or>
+      </definition>
+   </extension>
+   <extension
          point="org.eclipse.ui.editors">
       <editor
             class="com.aobuchow.sample.commander.parts.FileManagerEditor"
@@ -56,6 +83,123 @@
             </parameter>
          </class>
       </handler>
+   </extension>
+   <extension
+         point="org.eclipse.ui.elementFactories">
+      <factory
+            class="com.aobuchow.sample.commander.parts.ContainerEditorInputFactory"
+            id="com.aobuchow.sample.commander.parts.ContainerEditorInputFactory">
+      </factory>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors.documentProviders">
+      <provider
+            class="com.aobuchow.sample.commander.parts.ContainerEditorInput"
+            id="com.aobuchow.sample.commander.ContainerEditorInput">
+      </provider>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.adapters">
+      <factory
+            adaptableType="com.aobuchow.sample.commander.parts.IContainerEditorInput"
+            class="com.aobuchow.sample.commander.parts.ContainerInputFactory">
+         <adapter
+               type="org.eclipse.core.resources.IFolder">
+         </adapter>
+         <adapter
+               type="org.eclipse.core.resources.IResource">
+         </adapter>
+      </factory>
+   </extension>
+   <extension
+         point="org.eclipse.core.expressions.propertyTesters">
+      <propertyTester
+            class="com.aobuchow.sample.commander.parts.ContainerEditorInputTester"
+            id="org.eclipse.ui.ide.containerEditorInputTester"
+            namespace="org.eclipse.ui.ide.editor"
+            properties="input"
+            type="org.eclipse.ui.IWorkbenchPart">
+      </propertyTester>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+<menuContribution
+            locationURI="popup:org.eclipse.ui.menus.showInMenu">
+          <command
+             commandId="com.aobuchow.sample.commander.commands.openContainerResource"
+             label="File Manager"
+             mnemonic=""
+             icon="icons/AudioFile3_16.png"
+             style="push">
+          <visibleWhen
+                checkEnabled="false">
+             <reference
+                   definitionId="org.eclipse.ui.ide.showInDefinition">
+             </reference>
+          </visibleWhen>
+         </command>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            name="Open Folder "
+            description="Open a Folder in a Sample Commander File Manager"
+            categoryId="org.eclipse.ui.category.navigate"
+            id="com.aobuchow.sample.commander.commands.openContainerResource"
+            defaultHandler="com.aobuchow.sample.commander.parts.OpenResourceHandler">
+         <commandParameter
+               id="org.eclipse.ui.ide.showInSystemExplorer.path"
+               name="%commandParameter.resourceSystemPath"
+               typeId="org.eclipse.ui.ide.resourcePath">
+         </commandParameter>
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.navigator.linkHelper">
+      <linkHelper
+            class="com.aobuchow.sample.commander.ContainerLinkHelper"
+            id="com.aobuchow.sample.commander.containerLinkHelper">
+         <editorInputEnablement>
+            <with variable="selection">
+                    <count value="1" />
+                    <iterate ifEmpty="false">
+                       <or>
+                          <adapt
+                                type="org.eclipse.core.resources.IFolder">
+                          </adapt>
+                          <adapt
+                                type="org.eclipse.core.resources.IFile">
+                          </adapt>
+                       </or>
+                    </iterate>
+             </with></editorInputEnablement>
+         <selectionEnablement>
+          <with variable="selection">
+                    <count value="1" />
+                    <iterate ifEmpty="false">
+                       <or>
+                          <adapt
+                                type="org.eclipse.core.resources.IFolder">
+                          </adapt>
+                          <adapt
+                                type="org.eclipse.core.resources.IFile">
+                          </adapt>
+                       </or>
+                    </iterate>
+             </with></selectionEnablement>
+      </linkHelper>
+   </extension>
+   <extension
+         point="org.eclipse.ui.navigator.viewer">
+      <viewerContentBinding
+            viewerId="org.eclipse.ui.navigator.ProjectExplorer">
+         <includes>
+            <contentExtension
+                  pattern="com.aobuchow.sample.commander.containerLinkHelper">
+            </contentExtension>
+         </includes>
+      </viewerContentBinding>
    </extension>
 
 </plugin>

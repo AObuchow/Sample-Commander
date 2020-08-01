@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -23,6 +23,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
@@ -30,7 +31,6 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
@@ -39,7 +39,6 @@ import org.eclipse.ui.IPropertyListener;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.actions.DeleteResourceAction;
 import org.eclipse.ui.part.EditorPart;
-import org.eclipse.ui.part.FileEditorInput;
 
 import com.aobuchow.sample.commander.Activator;
 import com.aobuchow.sample.commander.resources.AudioFile;
@@ -49,7 +48,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 	private TableViewer viewer;
 	private Object[] model;
 	private String titleName = null;
-	private IFile inputFile = null;
+	private IContainer inputContainer = null;
 	private IWorkspace workspace;
 	private IResourceChangeListener workspaceChangeListener;
 
@@ -73,19 +72,21 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 				return "null";
 			}
 		});
-		
+
 		this.viewer.addSelectionChangedListener((event) -> {
-			// TODO: Only play when selection length == 1
-			AudioFile selectedFile = (AudioFile) event.getStructuredSelection().getFirstElement();
-			if ( selectedFile instanceof AudioFile) {
-				Activator.getDefault().getAudioPlayer().play( selectedFile);
+			if (event.getStructuredSelection().size() == 1) {
+				Object selection = event.getStructuredSelection().getFirstElement();
+				if (selection instanceof AudioFile) {
+					Activator.getDefault().getAudioPlayer().play((AudioFile) selection);
+				}
 			}
+
 		});
 		this.viewer.getTable().setLinesVisible(true);
 		this.viewer.getTable().setHeaderVisible(true);
 		this.viewer.setInput(model);
 
-		this.titleName = inputFile.getParent().getName();
+		this.titleName = inputContainer.getName();
 		this.setPartName(titleName);
 		super.firePropertyChange(PROP_TITLE);
 
@@ -251,23 +252,22 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 	@Override
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
 		try {
-			setInputFile(((IFileEditorInput) input).getFile());
-			this.model = createModel(inputFile);
+			if (input instanceof IContainerEditorInput) {
+				setInputFile(((IContainerEditorInput) input).getContainer());
+			} else if (input instanceof IFileEditorInput) {
+				setInputFile(((IFileEditorInput) input).getFile().getParent());
+			}
+			this.model = createModel(inputContainer);
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
 		setSite(site);
-		//setInput is called in setInputFile
+		// setInput is called in setInputFile
 		createPartControl(site.getShell());
 
 		workspace = ResourcesPlugin.getWorkspace();
 		workspaceChangeListener = event -> {
 			switch (event.getType()) {
-			case IResourceChangeEvent.PRE_DELETE:
-				if (event.getResource().equals(inputFile)) {
-					this.changeEditorInput();
-				}
-				break;
 			case IResourceChangeEvent.POST_CHANGE:
 				this.refresh();
 				break;
@@ -276,45 +276,32 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 		workspace.addResourceChangeListener(workspaceChangeListener);
 	}
 
-	private void changeEditorInput() {
-		Object[] input = (Object[]) this.viewer.getInput(); 
-		List<AudioFile> audioFilesInDir = Arrays.asList(input).stream().filter(obj -> obj instanceof AudioFile)
-				.map(obj -> (AudioFile) obj).filter(audioFile -> audioFile.exists()).collect(Collectors.toList());
-		if (audioFilesInDir.size() > 0) {
-			this.setInputFile(audioFilesInDir.get(0));
-		}
-	}
-
-	private void setInputFile(IFile inputFile) {
-		this.inputFile = inputFile;
-		setInput(new FileEditorInput(inputFile));
+	private void setInputFile(IContainer inputContainer) {
+		this.inputContainer = inputContainer;
+		setInput(new ContainerEditorInput(inputContainer));
 	}
 
 	public void delete() {
-		if (this.viewer.getStructuredSelection().toList().stream().anyMatch(sel -> {
-			IFile selectedFile = Adapters.adapt(sel, IFile.class);
-			return selectedFile.equals(inputFile);
-		})) {
-			changeEditorInput();
-		}
-
 		DeleteResourceAction action = new DeleteResourceAction(getSite());
 		action.selectionChanged(this.viewer.getStructuredSelection());
 		action.run();
 	}
 
 	public void refresh() {
-		if (!this.inputFile.exists()) {
-			changeEditorInput();
-		}
 		if (this.viewer == null) {
 			return;
 		}
 		try {
-			this.model = createModel(inputFile);
+			this.model = createModel(inputContainer);
 			viewer.getControl().getDisplay().asyncExec(() -> this.viewer.setInput(model));
 		} catch (CoreException e) {
 			e.printStackTrace();
+		}
+	}
+
+	public void setSelection(IStructuredSelection aSelection) {
+		if (this.viewer != null) {
+			this.viewer.setSelection(aSelection);
 		}
 	}
 
