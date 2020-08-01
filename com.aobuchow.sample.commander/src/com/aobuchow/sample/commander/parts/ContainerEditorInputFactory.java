@@ -11,8 +11,8 @@ import org.eclipse.ui.IMemento;
 
 public class ContainerEditorInputFactory implements IElementFactory {
 	/**
-	 * Factory id. The workbench plug-in registers a factory by this name with the
-	 * "org.eclipse.ui.elementFactories" extension point.
+	 * Factory id. The workbench plug-in registers a factory by this name
+	 * with the "org.eclipse.ui.elementFactories" extension point.
 	 */
 	private static final String ID_FACTORY = "com.aobuchow.sample.commander.parts.ContainerEditorInputFactory"; //$NON-NLS-1$
 
@@ -37,9 +37,8 @@ public class ContainerEditorInputFactory implements IElementFactory {
 
 		IPath relativePath = new Path(fileName).makeRelative();
 		IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(relativePath.lastSegment());
-		if (project != null) {
-			// TODO: Add a better way to test if the relativePath given is that of the
-			// project?
+		if (project != null && project.exists()) {
+			// TODO: Add a better way to test if the relativePath given is that of the project?
 			return new ContainerEditorInput(project);
 		} else {
 			IContainer file = ResourcesPlugin.getWorkspace().getRoot().getFolder(relativePath);
@@ -64,7 +63,7 @@ public class ContainerEditorInputFactory implements IElementFactory {
 	 * Saves the state of the given file editor input into the given memento.
 	 *
 	 * @param memento the storage area for element state
-	 * @param input   the file editor input
+	 * @param input the file editor input
 	 */
 	public static void saveState(IMemento memento, ContainerEditorInput input) {
 		IContainer file = input.getContainer();

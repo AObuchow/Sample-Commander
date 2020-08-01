@@ -143,7 +143,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 	private Object[] createModel(IResource o) throws CoreException {
 		Collection<Object> filesInSelectedDir = new ArrayList<Object>();
 		IFolder parentFolder;
-		if (!o.isAccessible()) {
+		if (!o.isAccessible() && !(o instanceof IProject)) {
 			return null;
 		}
 		if (o instanceof IProject) {
@@ -271,6 +271,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 		// setInput is called in setInputFile
 		createPartControl(site.getShell());
 
+		workspace = ResourcesPlugin.getWorkspace();
 		workspaceChangeListener = event -> {
 			switch (event.getType()) {
 			case IResourceChangeEvent.POST_CHANGE:

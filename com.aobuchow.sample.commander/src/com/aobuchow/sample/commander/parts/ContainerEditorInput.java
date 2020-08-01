@@ -69,7 +69,7 @@ public class ContainerEditorInput extends PlatformObject
 
 	@Override
 	public String getName() {
-		return container.getName();
+			return container.getName();	
 	}
 
 	@Override

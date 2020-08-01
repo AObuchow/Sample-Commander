@@ -4,6 +4,7 @@ import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Adapters;
@@ -37,7 +38,13 @@ public class OpenResourceHandler extends AbstractHandler {
 		if (item == null) {
 			return null;
 		}
-		IContainer container = Adapters.adapt(item, IContainer.class);
+		IContainer container;
+		if (item instanceof IFile) {
+			container = Adapters.adapt(item, IFile.class).getParent();
+		} else {
+			container = Adapters.adapt(item, IContainer.class);
+		}
+		
 
 			final IWorkbenchWindow window = PlatformUI.getWorkbench()
 					.getActiveWorkbenchWindow();
