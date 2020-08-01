@@ -28,14 +28,11 @@ public class Activator implements BundleActivator {
 	public void start(BundleContext bundleContext) throws Exception {
 		Activator.context = bundleContext;
 		plugin = this;
-		// TODO: Run Async?
 		Display.getDefault().asyncExec(() -> {
 			audioPlayer = newAudioPlayer();	
 			
 		});
-		
 	}
-	
 
 	public void stop(BundleContext bundleContext) throws Exception {
 		plugin = null;
