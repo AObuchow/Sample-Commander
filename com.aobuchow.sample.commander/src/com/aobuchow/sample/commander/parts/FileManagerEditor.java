@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -38,6 +39,7 @@ import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IPropertyListener;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.actions.DeleteResourceAction;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.EditorPart;
 
 import com.aobuchow.sample.commander.Activator;
@@ -55,6 +57,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 	@PostConstruct
 	@Override
 	public void createPartControl(Composite parent) {
+		// TODO: Extract the class to a viewer?
 		this.viewer = new TableViewer(parent, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 		this.viewer.setContentProvider(ArrayContentProvider.getInstance());
 		this.viewer.setComparator(new ResourceComparator());
@@ -170,10 +173,11 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 
 	@Focus
 	public void setFocus() {
-
+		// TODO: Remove?
 	}
 
 	@Override
+	// TODO: Remove?
 	public void addPropertyListener(IPropertyListener listener) {
 	}
 
@@ -195,7 +199,9 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 
 	@Override
 	public String getTitleToolTip() {
-		// TODO: Return full path of the folder
+		if (inputContainer != null) {
+			return inputContainer.getFullPath().toString();
+		}
 		return null;
 	}
 
@@ -265,7 +271,6 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 		// setInput is called in setInputFile
 		createPartControl(site.getShell());
 
-		workspace = ResourcesPlugin.getWorkspace();
 		workspaceChangeListener = event -> {
 			switch (event.getType()) {
 			case IResourceChangeEvent.POST_CHANGE:
@@ -303,6 +308,18 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 		if (this.viewer != null) {
 			this.viewer.setSelection(aSelection);
 		}
+	}
+
+	public void copy() {
+		List<IResource> filesToCopy = (List<IResource>) this.viewer.getStructuredSelection().toList().stream()
+				.filter(selection -> selection instanceof IResource).collect(Collectors.toList());
+		if (!filesToCopy.isEmpty()) {
+			Activator.getDefault().getClipboard().copy(filesToCopy.toArray(new IResource[filesToCopy.size()]));	
+		}
+	}
+
+	public void paste() {
+		Activator.getDefault().getClipboard().paste(inputContainer, getEditorSite().getShell());
 	}
 
 }
