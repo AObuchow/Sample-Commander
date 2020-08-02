@@ -29,7 +29,6 @@ public class ContainerEditorInputFactory implements IElementFactory {
 
 	@Override
 	public IAdaptable createElement(IMemento memento) {
-		// Get the file name.
 		String fileName = memento.getString(TAG_PATH);
 		if (fileName == null) {
 			return null;
@@ -38,7 +37,6 @@ public class ContainerEditorInputFactory implements IElementFactory {
 		IPath relativePath = new Path(fileName).makeRelative();
 		IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(relativePath.lastSegment());
 		if (project != null && project.exists()) {
-			// TODO: Add a better way to test if the relativePath given is that of the project?
 			return new ContainerEditorInput(project);
 		} else {
 			IContainer file = ResourcesPlugin.getWorkspace().getRoot().getFolder(relativePath);

@@ -32,14 +32,20 @@ public class Activator implements BundleActivator {
 		Display.getDefault().asyncExec(() -> {
 			audioPlayer = newAudioPlayer();	
 		});
-		clipboard = new FileClipBoard(Display.getDefault());
+	}
+	
+	// See https://bugs.eclipse.org/bugs/show_bug.cgi?id=265741, don't call in start method
+	// Also don't dispose the clipboard for this reason..
+	public void initClipBoard(Display display) {
+		if (clipboard == null) {
+			clipboard = new FileClipBoard(display);	
+		}
 	}
 
 	public void stop(BundleContext bundleContext) throws Exception {
 		plugin = null;
 		Activator.context = null;
 		shutdownAudioPlayer();
-		clipboard.dispose();
 	}
 
 	public AudioPlayer getAudioPlayer() {
