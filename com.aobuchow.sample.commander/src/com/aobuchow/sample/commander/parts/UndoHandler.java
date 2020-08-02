@@ -6,13 +6,13 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.handlers.HandlerUtil;
 
-public class SampleDeleteHandler extends AbstractHandler {
+public class UndoHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IWorkbenchPart part = HandlerUtil.getActivePart(event);
 		if (part instanceof FileManagerEditor) {
-			((FileManagerEditor) part).delete();
+			((FileManagerEditor) part).undo();
 		}
 		return null;
 	}

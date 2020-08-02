@@ -9,6 +9,11 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.commands.operations.IOperationHistory;
+import org.eclipse.core.commands.operations.IUndoContext;
+import org.eclipse.core.commands.operations.IUndoableOperation;
+import org.eclipse.core.commands.operations.OperationHistoryFactory;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -21,6 +26,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
@@ -32,14 +38,20 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IPropertyListener;
+import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.actions.DeleteResourceAction;
-import org.eclipse.ui.handlers.IHandlerService;
+import org.eclipse.ui.ide.undo.WorkspaceUndoUtil;
+import org.eclipse.ui.operations.RedoActionHandler;
+import org.eclipse.ui.operations.UndoActionHandler;
 import org.eclipse.ui.part.EditorPart;
 
 import com.aobuchow.sample.commander.Activator;
@@ -53,6 +65,8 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 	private IContainer inputContainer = null;
 	private IWorkspace workspace;
 	private IResourceChangeListener workspaceChangeListener;
+	private IOperationHistory history;
+	private IUndoContext undoContext;
 
 	@PostConstruct
 	@Override
@@ -280,6 +294,22 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 			}
 		};
 		workspace.addResourceChangeListener(workspaceChangeListener);
+		
+		undoContext = (IUndoContext) ResourcesPlugin.getWorkspace().getAdapter(IUndoContext.class);
+
+		IWorkbench workbench = getSite().getWorkbenchWindow().getWorkbench();
+		history = workbench.getOperationSupport().getOperationHistory();
+
+		UndoActionHandler undoAction = new UndoActionHandler(site, IOperationHistory.GLOBAL_UNDO_CONTEXT);
+		RedoActionHandler redoAction = new RedoActionHandler(site, IOperationHistory.GLOBAL_UNDO_CONTEXT);
+		IActionBars actionBars = site.getActionBars();
+		actionBars.setGlobalActionHandler(ActionFactory.UNDO.getId(),
+		undoAction);
+		actionBars.setGlobalActionHandler(ActionFactory.REDO.getId(),
+		redoAction);
+		actionBars.updateActionBars();
+		
+		Activator.getDefault().initClipBoard(site.getWorkbenchWindow().getShell().getDisplay());
 	}
 
 	private void setInputFile(IContainer inputContainer) {
@@ -314,13 +344,30 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 	public void copy() {
 		List<IResource> filesToCopy = (List<IResource>) this.viewer.getStructuredSelection().toList().stream()
 				.filter(selection -> selection instanceof IResource).collect(Collectors.toList());
+		
 		if (!filesToCopy.isEmpty()) {
 			Activator.getDefault().getClipboard().copy(filesToCopy.toArray(new IResource[filesToCopy.size()]));	
 		}
 	}
+	
+	public void undo() {
+		try {
+			history.undo(undoContext, new NullProgressMonitor(), WorkspaceUndoUtil.getUIInfoAdapter(PlatformUI.getWorkbench().getDisplay().getActiveShell()));
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void redo() {
+		try {
+			history.redo(undoContext, new NullProgressMonitor(), WorkspaceUndoUtil.getUIInfoAdapter(PlatformUI.getWorkbench().getDisplay().getActiveShell()));
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
+	}
 
 	public void paste() {
-		Activator.getDefault().getClipboard().paste(inputContainer, getEditorSite().getShell());
+		Activator.getDefault().getClipboard().paste(inputContainer, PlatformUI.getWorkbench().getDisplay().getActiveShell(), history);
 	}
 
 }
