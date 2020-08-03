@@ -20,6 +20,7 @@ public class Activator extends AbstractUIPlugin {
 	private AudioPlayer audioPlayer;
 	private static ExecutorService streamPlayerExecutor;
 	private static ExecutorService streamPlayerEventExecutor;
+	// TODO: Make this a field of FileManagerEditor
 	private FileClipBoard clipboard;
 	
 	public static final String PLUGIN_ID = "com.aobuchow.sample.commander";

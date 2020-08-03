@@ -12,6 +12,10 @@ public class FileManagerMatchingStrategy implements IEditorMatchingStrategy {
 
 	@Override
 	public boolean matches(IEditorReference editorRef, IEditorInput input) {
+		return staticMatches(editorRef, input);
+	}
+
+	public static boolean staticMatches(IEditorReference editorRef, IEditorInput input) {
 		IContainer refParent = null;
 		if (input == null) {
 			return false;

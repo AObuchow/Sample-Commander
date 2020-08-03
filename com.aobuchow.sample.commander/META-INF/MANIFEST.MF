@@ -37,7 +37,6 @@ Import-Package: javax.annotation;version="1.2.0"
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
  lib/java-stream-player-10.0.2.jar,
- lib/jflac-codec-1.1.0.jar,
  lib/commons-io-2.6.jar,
  lib/jflac-codec-1.5.2.jar,
  lib/vorbis-support-1.1.0.jar,

@@ -34,11 +34,14 @@ import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.DND;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IPropertyListener;
@@ -48,12 +51,15 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.actions.DeleteResourceAction;
+import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.ide.undo.WorkspaceUndoUtil;
 import org.eclipse.ui.operations.RedoActionHandler;
 import org.eclipse.ui.operations.UndoActionHandler;
 import org.eclipse.ui.part.EditorPart;
+import org.eclipse.ui.part.ResourceTransfer;
 
 import com.aobuchow.sample.commander.Activator;
+import com.aobuchow.sample.commander.handlers.OpenResourceHandler;
 import com.aobuchow.sample.commander.resources.AudioFile;
 
 public class FileManagerEditor extends EditorPart implements IEditorPart {
@@ -103,24 +109,39 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 					Activator.getDefault().getAudioPlayer().play((AudioFile) selection);
 				}
 			}
-
 		});
 
 		this.viewer.addDoubleClickListener((event) -> {
 			IStructuredSelection selection = (IStructuredSelection) event.getSelection();
 			if (selection.getFirstElement() instanceof IFolder) {
-				changeActiveContainer((IContainer) selection.getFirstElement());
-				// TODO: If an editor is already open with this folder, open it? 
-//				try {
-//					IDE.openEditor(this.getEditorSite().getPage(),
-//							new ContainerEditorInput((IContainer) selection.getFirstElement()),
-//							OpenResourceHandler.EDITOR_ID);
-//				} catch (PartInitException e) {
-//					e.printStackTrace();
-//				}
+				IContainer selectedDirectory = (IContainer) selection.getFirstElement();
+				
+				// Check if an editor already exists for the selected directory
+				IEditorReference[] editorRefs = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
+						.getEditorReferences();
+				List<IEditorReference> editorRefsList = Arrays.asList(editorRefs);
+				editorRefsList = editorRefsList.stream().filter(editorRef -> {
+					return FileManagerMatchingStrategy.staticMatches(editorRef, new ContainerEditorInput(selectedDirectory));
+				}).collect(Collectors.toList());
+
+				if (!editorRefsList.isEmpty()) {
+					try {
+						IDE.openEditor(this.getEditorSite().getPage(),
+								new ContainerEditorInput((IContainer) selection.getFirstElement()),
+								OpenResourceHandler.EDITOR_ID);
+					} catch (PartInitException e) {
+						e.printStackTrace();
+					}
+				} else {
+					changeActiveContainer(selectedDirectory);
+				}
 			}
 		});
-
+		
+		int operations = DND.DROP_COPY | DND.DROP_MOVE;
+        Transfer[] transferTypes = new Transfer[]{ResourceTransfer.getInstance()};
+		this.viewer.addDropSupport(operations, transferTypes, new FileManagerDropListener(this));
+		this.viewer.addDragSupport(operations, transferTypes , new FileManagerListener(viewer));
 		this.viewer.getTable().setLinesVisible(false);
 		this.viewer.getTable().setHeaderVisible(true);
 		this.viewer.setInput(model);
@@ -216,6 +237,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 	public void dispose() {
 		viewer.getControl().dispose();
 		workspace.removeResourceChangeListener(workspaceChangeListener);
+		Activator.getDefault().getClipboard().dispose();
 	}
 
 	@Override
@@ -244,7 +266,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 
 	@Override
 	public boolean isDirty() {
-		// TODO: Return whether a file operation has occured in this directory
+		// TODO: Return whether a file operation has occurred in this directory
 		return false;
 	}
 
@@ -386,6 +408,14 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 	public void paste() {
 		Activator.getDefault().getClipboard().paste(inputContainer,
 				PlatformUI.getWorkbench().getDisplay().getActiveShell(), history);
+	}
+
+	public Viewer getViewer() {
+		return this.viewer;
+	}
+
+	public IContainer getContainer() {
+		return inputContainer;
 	}
 
 }
