@@ -60,9 +60,6 @@
          <contentTypeBinding
                contentTypeId="com.aobuchow.sample.commander.content.type.audioFile">
          </contentTypeBinding>
-         <contentTypeBinding
-               contentTypeId="com.aobuchow.sample.commander.contentTypeBinding1">
-         </contentTypeBinding>
       </editor>
    </extension>
    <extension

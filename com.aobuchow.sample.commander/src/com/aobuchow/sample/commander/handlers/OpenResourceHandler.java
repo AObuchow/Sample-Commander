@@ -32,7 +32,8 @@ public class OpenResourceHandler extends AbstractHandler {
 	public static final String RESOURCE_PATH_PARAMETER = "org.eclipse.ui.ide.showInSystemExplorer.path"; //$NON-NLS-1$
 	
 	// TODO: Rename..
-	private static final String EDITOR_ID = "com.aobuchow.sample.commander.editor1";
+	// TODO: This should be in the FileManagerEditor class
+	public static final String EDITOR_ID = "com.aobuchow.sample.commander.editor1";
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
