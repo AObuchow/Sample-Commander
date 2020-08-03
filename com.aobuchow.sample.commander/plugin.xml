@@ -49,13 +49,13 @@
    <extension
          point="org.eclipse.ui.editors">
       <editor
-            class="com.aobuchow.sample.commander.parts.FileManagerEditor"
-            contributorClass="com.aobuchow.sample.commander.parts.FileManagerActionBar"
+            class="com.aobuchow.sample.commander.editor.FileManagerEditor"
+            contributorClass="com.aobuchow.sample.commander.editor.FileManagerActionBar"
             default="true"
             extensions="mp3, wav"
             icon="icons/AudioFile3_16.png"
             id="com.aobuchow.sample.commander.editor1"
-            matchingStrategy="com.aobuchow.sample.commander.parts.FileManagerMatchingStrategy"
+            matchingStrategy="com.aobuchow.sample.commander.editor.FileManagerMatchingStrategy"
             name="File Manager">
          <contentTypeBinding
                contentTypeId="com.aobuchow.sample.commander.content.type.audioFile">
@@ -68,7 +68,7 @@
    <extension
          point="org.eclipse.ui.handlers">
       <handler
-            class="com.aobuchow.sample.commander.parts.DeleteHandler"
+            class="com.aobuchow.sample.commander.handlers.DeleteHandler"
             commandId="org.eclipse.ui.edit.delete">
          <activeWhen>
 			<with variable="activeEditorId">
@@ -76,11 +76,11 @@
    			 </with>         
    		</activeWhen>
          <class
-               class="com.aobuchow.sample.commander.parts.DeleteHandler">
+               class="com.aobuchow.sample.commander.handlers.DeleteHandler">
          </class>
       </handler>
       <handler
-            class="com.aobuchow.sample.commander.parts.CopyHandler"
+            class="com.aobuchow.sample.commander.handlers.CopyHandler"
             commandId="org.eclipse.ui.edit.copy">
          <activeWhen>
             <with
@@ -91,11 +91,11 @@
             </with>
          </activeWhen>
          <class
-               class="com.aobuchow.sample.commander.parts.CopyHandler">
+               class="com.aobuchow.sample.commander.handlers.CopyHandler">
          </class>
       </handler>
       <handler
-            class="com.aobuchow.sample.commander.parts.PasteHandler"
+            class="com.aobuchow.sample.commander.handlers.PasteHandler"
             commandId="org.eclipse.ui.edit.paste">
          <activeWhen>
             <with
@@ -106,11 +106,11 @@
             </with>
          </activeWhen>
          <class
-               class="com.aobuchow.sample.commander.parts.DeleteHandler">
+               class="com.aobuchow.sample.commander.handlers.DeleteHandler">
          </class>
       </handler>
       <handler
-            class="com.aobuchow.sample.commander.parts.UndoHandler"
+            class="com.aobuchow.sample.commander.handlers.UndoHandler"
             commandId="org.eclipse.ui.edit.undo">
          <activeWhen>
             <with
@@ -121,11 +121,11 @@
             </with>
          </activeWhen>
          <class
-               class="com.aobuchow.sample.commander.parts.UndoHandler">
+               class="com.aobuchow.sample.commander.handlers.UndoHandler">
          </class>
       </handler>
       <handler
-            class="com.aobuchow.sample.commander.parts.RedoHandler"
+            class="com.aobuchow.sample.commander.handlers.RedoHandler"
             commandId="org.eclipse.ui.edit.redo">
          <activeWhen>
             <with
@@ -136,29 +136,29 @@
             </with>
          </activeWhen>
          <class
-               class="com.aobuchow.sample.commander.parts.RedoHandler">
+               class="com.aobuchow.sample.commander.handlers.RedoHandler">
          </class>
       </handler>
    </extension>
    <extension
          point="org.eclipse.ui.elementFactories">
       <factory
-            class="com.aobuchow.sample.commander.parts.ContainerEditorInputFactory"
-            id="com.aobuchow.sample.commander.parts.ContainerEditorInputFactory">
+            class="com.aobuchow.sample.commander.editor.ContainerEditorInputFactory"
+            id="com.aobuchow.sample.commander.editor.ContainerEditorInputFactory">
       </factory>
    </extension>
    <extension
          point="org.eclipse.ui.editors.documentProviders">
       <provider
-            class="com.aobuchow.sample.commander.parts.ContainerEditorInput"
+            class="com.aobuchow.sample.commander.editor.ContainerEditorInput"
             id="com.aobuchow.sample.commander.ContainerEditorInput">
       </provider>
    </extension>
    <extension
          point="org.eclipse.core.runtime.adapters">
       <factory
-            adaptableType="com.aobuchow.sample.commander.parts.IContainerEditorInput"
-            class="com.aobuchow.sample.commander.parts.ContainerInputFactory">
+            adaptableType="com.aobuchow.sample.commander.editor.IContainerEditorInput"
+            class="com.aobuchow.sample.commander.editor.ContainerInputFactory">
          <adapter
                type="org.eclipse.core.resources.IFolder">
          </adapter>
@@ -170,7 +170,7 @@
    <extension
          point="org.eclipse.core.expressions.propertyTesters">
       <propertyTester
-            class="com.aobuchow.sample.commander.parts.ContainerEditorInputTester"
+            class="com.aobuchow.sample.commander.editor.ContainerEditorInputTester"
             id="org.eclipse.ui.ide.containerEditorInputTester"
             namespace="org.eclipse.ui.ide.editor"
             properties="input"
@@ -203,7 +203,7 @@
             description="Open a Folder in a Sample Commander File Manager"
             categoryId="org.eclipse.ui.category.navigate"
             id="com.aobuchow.sample.commander.commands.openContainerResource"
-            defaultHandler="com.aobuchow.sample.commander.parts.OpenResourceHandler">
+            defaultHandler="com.aobuchow.sample.commander.handlers.OpenResourceHandler">
          <commandParameter
                id="org.eclipse.ui.ide.showInSystemExplorer.path"
                name="%commandParameter.resourceSystemPath"
@@ -214,7 +214,7 @@
    <extension
          point="org.eclipse.ui.navigator.linkHelper">
       <linkHelper
-            class="com.aobuchow.sample.commander.ContainerLinkHelper"
+            class="com.aobuchow.sample.commander.editor.ContainerLinkHelper"
             id="com.aobuchow.sample.commander.containerLinkHelper">
          <editorInputEnablement>
             <with variable="selection">

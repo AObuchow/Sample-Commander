@@ -1,4 +1,4 @@
-package com.aobuchow.sample.commander.parts;
+package com.aobuchow.sample.commander.editor;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IProject;
@@ -14,7 +14,7 @@ public class ContainerEditorInputFactory implements IElementFactory {
 	 * Factory id. The workbench plug-in registers a factory by this name
 	 * with the "org.eclipse.ui.elementFactories" extension point.
 	 */
-	private static final String ID_FACTORY = "com.aobuchow.sample.commander.parts.ContainerEditorInputFactory"; //$NON-NLS-1$
+	private static final String ID_FACTORY = "com.aobuchow.sample.commander.editor.ContainerEditorInputFactory"; //$NON-NLS-1$
 
 	/**
 	 * Tag for the IFile.fullPath of the file resource.

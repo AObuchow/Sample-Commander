@@ -46,7 +46,7 @@ Bundle-ClassPath: .,
  lib/mp3spi-1.9.5.4.jar,
  lib/tritonus-share-0.3.7.4.jar
 Export-Package: com.aobuchow.sample.commander;x-internal:=true,
- com.aobuchow.sample.commander.parts;x-internal:=true,
+ com.aobuchow.sample.commander.editor;x-internal:=true,
  com.aobuchow.sample.commander.resources;x-internal:=true,
  com.github.trilarion.sound.sampled;x-internal:=true,
  com.github.trilarion.sound.sampled.spi;x-internal:=true,

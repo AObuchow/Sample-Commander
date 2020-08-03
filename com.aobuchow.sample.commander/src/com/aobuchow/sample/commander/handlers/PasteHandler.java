@@ -1,4 +1,4 @@
-package com.aobuchow.sample.commander.parts;
+package com.aobuchow.sample.commander.handlers;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -6,13 +6,15 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.handlers.HandlerUtil;
 
-public class DeleteHandler extends AbstractHandler {
+import com.aobuchow.sample.commander.editor.FileManagerEditor;
+
+public class PasteHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IWorkbenchPart part = HandlerUtil.getActivePart(event);
 		if (part instanceof FileManagerEditor) {
-			((FileManagerEditor) part).delete();
+			((FileManagerEditor) part).paste();
 		}
 		return null;
 	}
