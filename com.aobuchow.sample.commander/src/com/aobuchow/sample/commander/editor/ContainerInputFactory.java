@@ -1,4 +1,4 @@
-package com.aobuchow.sample.commander.parts;
+package com.aobuchow.sample.commander.editor;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;

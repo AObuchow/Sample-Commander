@@ -1,4 +1,4 @@
-package com.aobuchow.sample.commander.parts;
+package com.aobuchow.sample.commander.editor;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
