@@ -6,12 +6,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eclipse.swt.widgets.Display;
-import org.osgi.framework.BundleActivator;
+import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import com.goxr3plus.streamplayer.stream.ThreadFactoryWithNamePrefix;
 // TODO: Extend AbstractUIPlugin?
-public class Activator implements BundleActivator {
+public class Activator extends AbstractUIPlugin {
 	
 	// The shared instance
 	private static Activator plugin;
@@ -21,6 +21,8 @@ public class Activator implements BundleActivator {
 	private static ExecutorService streamPlayerExecutor;
 	private static ExecutorService streamPlayerEventExecutor;
 	private FileClipBoard clipboard;
+	
+	public static final String PLUGIN_ID = "com.aobuchow.sample.commander";
 
 	static BundleContext getContext() {
 		return context;

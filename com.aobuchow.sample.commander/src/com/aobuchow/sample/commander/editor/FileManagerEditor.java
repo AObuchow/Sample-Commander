@@ -12,8 +12,6 @@ import javax.annotation.PostConstruct;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.IOperationHistory;
 import org.eclipse.core.commands.operations.IUndoContext;
-import org.eclipse.core.commands.operations.IUndoableOperation;
-import org.eclipse.core.commands.operations.OperationHistoryFactory;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -45,6 +43,7 @@ import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IPropertyListener;
 import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchPartConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
@@ -61,7 +60,6 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 
 	private TableViewer viewer;
 	private Object[] model;
-	private String titleName = null;
 	private IContainer inputContainer = null;
 	private IWorkspace workspace;
 	private IResourceChangeListener workspaceChangeListener;
@@ -79,14 +77,22 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 		column.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-				if (element instanceof AudioFile) {
-					return ((AudioFile) element).getName();
-				}
-				if (element instanceof IFolder) {
-					// TODO: Should use a folder icon instead...
-					return "/" + ((IFolder) element).getName() + "/";
+				if (element instanceof IResource) {
+					return ((IResource) element).getName();
 				}
 				return "null";
+			}
+
+			@Override
+			public Image getImage(Object element) {
+				if (element instanceof AudioFile) {
+					return Activator.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "icons/AudioFile3_16.png")
+							.createImage();
+				}
+				if (element instanceof IFolder) {
+					return Activator.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "icons/folder.png").createImage();
+				}
+				return null;
 			}
 		});
 
@@ -99,16 +105,27 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 			}
 
 		});
-		this.viewer.getTable().setLinesVisible(true);
+
+		this.viewer.addDoubleClickListener((event) -> {
+			IStructuredSelection selection = (IStructuredSelection) event.getSelection();
+			if (selection.getFirstElement() instanceof IFolder) {
+				changeActiveContainer((IContainer) selection.getFirstElement());
+				// TODO: If an editor is already open with this folder, open it? 
+//				try {
+//					IDE.openEditor(this.getEditorSite().getPage(),
+//							new ContainerEditorInput((IContainer) selection.getFirstElement()),
+//							OpenResourceHandler.EDITOR_ID);
+//				} catch (PartInitException e) {
+//					e.printStackTrace();
+//				}
+			}
+		});
+
+		this.viewer.getTable().setLinesVisible(false);
 		this.viewer.getTable().setHeaderVisible(true);
 		this.viewer.setInput(model);
 
-		this.titleName = inputContainer.getName();
-		this.setPartName(titleName);
-		super.firePropertyChange(PROP_TITLE);
-
-		// org.eclipse.ui.IWorkbenchCommandConstants.EDIT_DELETE
-
+		this.setPartName(inputContainer.getName());
 	}
 
 	private TableViewerColumn createColumnFor(TableViewer viewer, String label) {
@@ -202,20 +219,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 	}
 
 	@Override
-	public String getTitle() {
-		return titleName;
-	}
-
-	@Override
 	public Image getTitleImage() {
-		return null;
-	}
-
-	@Override
-	public String getTitleToolTip() {
-		if (inputContainer != null) {
-			return inputContainer.getFullPath().toString();
-		}
 		return null;
 	}
 
@@ -294,7 +298,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 			}
 		};
 		workspace.addResourceChangeListener(workspaceChangeListener);
-		
+
 		undoContext = (IUndoContext) ResourcesPlugin.getWorkspace().getAdapter(IUndoContext.class);
 
 		IWorkbench workbench = getSite().getWorkbenchWindow().getWorkbench();
@@ -303,18 +307,20 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 		UndoActionHandler undoAction = new UndoActionHandler(site, IOperationHistory.GLOBAL_UNDO_CONTEXT);
 		RedoActionHandler redoAction = new RedoActionHandler(site, IOperationHistory.GLOBAL_UNDO_CONTEXT);
 		IActionBars actionBars = site.getActionBars();
-		actionBars.setGlobalActionHandler(ActionFactory.UNDO.getId(),
-		undoAction);
-		actionBars.setGlobalActionHandler(ActionFactory.REDO.getId(),
-		redoAction);
+		actionBars.setGlobalActionHandler(ActionFactory.UNDO.getId(), undoAction);
+		actionBars.setGlobalActionHandler(ActionFactory.REDO.getId(), redoAction);
 		actionBars.updateActionBars();
-		
+
 		Activator.getDefault().initClipBoard(site.getWorkbenchWindow().getShell().getDisplay());
 	}
 
 	private void setInputFile(IContainer inputContainer) {
 		this.inputContainer = inputContainer;
 		setInput(new ContainerEditorInput(inputContainer));
+		this.setTitleToolTip(inputContainer.getFullPath().toString());
+		firePropertyChange(IWorkbenchPartConstants.PROP_INPUT);
+		firePropertyChange(IWorkbenchPartConstants.PROP_TITLE);
+		// this.setPartName(inputContainer);
 	}
 
 	public void delete() {
@@ -323,6 +329,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 		action.run();
 	}
 
+	// TODO: Always call this in setInputFile?
 	public void refresh() {
 		if (this.viewer == null) {
 			return;
@@ -335,6 +342,14 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 		}
 	}
 
+	private void changeActiveContainer(IContainer container) {
+		setInputFile(container);
+		refresh();
+		// TODO: These don't work?
+		setPartName(container.getName());
+		firePropertyChange(IWorkbenchPartConstants.PROP_PART_NAME);
+	}
+
 	public void setSelection(IStructuredSelection aSelection) {
 		if (this.viewer != null) {
 			this.viewer.setSelection(aSelection);
@@ -344,30 +359,33 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 	public void copy() {
 		List<IResource> filesToCopy = (List<IResource>) this.viewer.getStructuredSelection().toList().stream()
 				.filter(selection -> selection instanceof IResource).collect(Collectors.toList());
-		
+
 		if (!filesToCopy.isEmpty()) {
-			Activator.getDefault().getClipboard().copy(filesToCopy.toArray(new IResource[filesToCopy.size()]));	
+			Activator.getDefault().getClipboard().copy(filesToCopy.toArray(new IResource[filesToCopy.size()]));
 		}
 	}
-	
+
 	public void undo() {
 		try {
-			history.undo(undoContext, new NullProgressMonitor(), WorkspaceUndoUtil.getUIInfoAdapter(PlatformUI.getWorkbench().getDisplay().getActiveShell()));
+			history.undo(undoContext, new NullProgressMonitor(),
+					WorkspaceUndoUtil.getUIInfoAdapter(PlatformUI.getWorkbench().getDisplay().getActiveShell()));
 		} catch (ExecutionException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void redo() {
 		try {
-			history.redo(undoContext, new NullProgressMonitor(), WorkspaceUndoUtil.getUIInfoAdapter(PlatformUI.getWorkbench().getDisplay().getActiveShell()));
+			history.redo(undoContext, new NullProgressMonitor(),
+					WorkspaceUndoUtil.getUIInfoAdapter(PlatformUI.getWorkbench().getDisplay().getActiveShell()));
 		} catch (ExecutionException e) {
 			e.printStackTrace();
 		}
 	}
 
 	public void paste() {
-		Activator.getDefault().getClipboard().paste(inputContainer, PlatformUI.getWorkbench().getDisplay().getActiveShell(), history);
+		Activator.getDefault().getClipboard().paste(inputContainer,
+				PlatformUI.getWorkbench().getDisplay().getActiveShell(), history);
 	}
 
 }
