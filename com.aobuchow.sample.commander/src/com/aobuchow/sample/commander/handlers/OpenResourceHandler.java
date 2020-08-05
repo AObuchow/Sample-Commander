@@ -10,10 +10,13 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFileEditorInput;
+import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -21,6 +24,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.ide.IDE;
+import org.eclipse.ui.views.IViewDescriptor;
 
 import com.aobuchow.sample.commander.editor.ContainerEditorInput;
 
@@ -92,13 +96,19 @@ public class OpenResourceHandler extends AbstractHandler {
 	}
 
 	private IResource getSelectionResource(ExecutionEvent event) {
-		IStructuredSelection selection = HandlerUtil.getCurrentStructuredSelection(event);
+		// Prioritize project explorer selection if its active
+		// TODO: If this handler gets used in other context menus, this will likely change
+		// IStructuredSelection selection = HandlerUtil.getCurrentStructuredSelection(event);
+		
+		ISelectionService selectionService = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+
+		TreeSelection selection = (TreeSelection) selectionService.getSelection("org.eclipse.ui.navigator.ProjectExplorer");
+
 		if ((selection == null) || (selection.isEmpty())) {
 			return null;
 		}
 
-		Object selectedObject = selection
-				.getFirstElement();
+		Object selectedObject = selection.getFirstElement();
 		return Adapters.adapt(selectedObject, IResource.class);
 	}
 
