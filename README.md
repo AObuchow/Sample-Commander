@@ -6,11 +6,11 @@ It is written as an eclipse plugin and is available as a standalone e4 RCP appli
 
 ### Motivation
 
-Sample Commander was developed to offer the convenient audio playback experience provided in modern [DAW](https://en.wikipedia.org/wiki/Digital_audio_workstation)'s sample selection utilies with an [orthodox file manager](https://en.wikipedia.org/wiki/File_manager#Orthodox_file_managers) interface.
+Sample Commander aims to offer the convenient sample browsing experience provided in modern [DAW](https://en.wikipedia.org/wiki/Digital_audio_workstation)'s with an [orthodox file manager](https://en.wikipedia.org/wiki/File_manager#Orthodox_file_managers) interface.
 
 It takes inspiration from software such as:
 
-- **FL Studio:** provides the [browser](https://www.image-line.com/support/flstudio_online_manual/html/browser.htm) , a single file tree to view a users sample library. It is convenient for finding sounds to use in a song, but limited in its ability to quickly reorganize the sample libraries structure.
+- **FL Studio:** provides the [browser](https://www.image-line.com/support/flstudio_online_manual/html/browser.htm), a single file tree to view a users sample library. It is convenient for finding sounds to use in a song, but limited in its ability to quickly reorganize the sample libraries structure.
 
 - **Krusader:** A Qt based orthodox file manager. Provides excellent file mangement capabilities and workflow. 
 
