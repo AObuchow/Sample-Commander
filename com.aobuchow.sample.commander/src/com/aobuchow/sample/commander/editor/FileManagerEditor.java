@@ -84,6 +84,9 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 			@Override
 			public String getText(Object element) {
 				if (element instanceof IResource) {
+					if ((element instanceof IFolder || element instanceof IProject)&& element.equals(inputContainer.getParent())) {
+						return "..";
+					}
 					return ((IResource) element).getName();
 				}
 				return "null";
@@ -95,7 +98,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 					return Activator.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "icons/AudioFile3_16.png")
 							.createImage();
 				}
-				if (element instanceof IFolder) {
+				if (element instanceof IContainer) {
 					return Activator.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "icons/folder.png").createImage();
 				}
 				return null;
@@ -113,7 +116,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 
 		this.viewer.addDoubleClickListener((event) -> {
 			IStructuredSelection selection = (IStructuredSelection) event.getSelection();
-			if (selection.getFirstElement() instanceof IFolder) {
+			if (selection.getFirstElement() instanceof IContainer) {
 				IContainer selectedDirectory = (IContainer) selection.getFirstElement();
 				
 				// Check if an editor already exists for the selected directory
@@ -168,14 +171,21 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 	public class ResourceComparator extends ViewerComparator {
 		@Override
 		public int compare(Viewer viewer, Object e1, Object e2) {
-			// both are folders, sort alphabetically
-			if (e1 instanceof IFolder && e2 instanceof IFolder) {
-				return Comparator.comparing(IFolder::getName, String.CASE_INSENSITIVE_ORDER).compare((IFolder) e1,
-						(IFolder) e2);
+			// both are folders/projects, projects go first otherwise sort alphabetically
+			if (e1 instanceof IContainer && e2 instanceof IContainer) {
+				if (!e1.getClass().equals(e2.getClass())) {
+					if (e1 instanceof IProject) {
+						return -1;
+					} else {
+						return 1;
+					}
+				} 
+				return Comparator.comparing(IContainer::getName, String.CASE_INSENSITIVE_ORDER).compare((IContainer) e1,
+						(IContainer) e2);
 			}
-			// one is audio file, one is folder, folder goes first
+			// one is audio file, one is folder/project, folder/project goes first
 			if (!e1.getClass().equals(e2.getClass())) {
-				if (e1 instanceof IFolder) {
+				if (e1 instanceof IContainer) {
 					return -1;
 				} else {
 					return 1;
@@ -194,7 +204,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 	// TODO: Refactor this
 	private Object[] createModel(IResource o) throws CoreException {
 		Collection<Object> filesInSelectedDir = new ArrayList<Object>();
-		IFolder parentFolder;
+		IFolder parentFolder = null;
 		if (!o.isAccessible() && !(o instanceof IProject)) {
 			return null;
 		}
@@ -218,6 +228,10 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 				filesInSelectedDir = Arrays.asList(parentFolder.members()).stream()
 						.map(FileManagerEditor::resourceConverter).collect(Collectors.toList());
 			}
+		}
+		
+		if (parentFolder != null) {
+			filesInSelectedDir.add(parentFolder.getParent());
 		}
 
 		return filesInSelectedDir.stream().toArray(Object[]::new);
