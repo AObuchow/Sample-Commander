@@ -1,10 +1,8 @@
 # Sample Commander
 
-Sample Commander is an application designed to assist in organizing audio files, also known as [samples](https://en.wikipedia.org/wiki/Sampling_(music). 
+Sample Commander is an application designed to assist in organizing audio files, also known as [samples](https://en.wikipedia.org/wiki/Sampling_(music)). 
 
 It is written as an eclipse plugin and is available as a standalone e4 RCP application or as an eclipse plugin.
-
-
 
 ### Motivation
 
@@ -16,8 +14,6 @@ It takes inspiration from software such as:
 
 - **Krusader:** A Qt based orthodox file manager. Provides excellent file mangement capabilities and workflow. 
 
-
-
 ## Features:
 
 - View multiple directory contents side-by-side
@@ -28,21 +24,15 @@ It takes inspiration from software such as:
 
 - Git integration to keep track of changes to your audio library
 
-
-
 ## Screenshots:
 
 ![how_it_looks_1.png](./images/how_it_looks_1.png)
-
-
 
 ## 📥 Installation
 
 ### Update Site
 
 `https://raw.githubusercontent.com/AObuchow/Sample-Commander/updatesite/updatesite/`
-
-
 
 ## Libraries used:
 
