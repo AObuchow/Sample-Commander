@@ -41,10 +41,13 @@ public class FileClipBoard {
 		doCut = true;
 	}
 
-	public void paste(IContainer destination, Shell shell) {
+	public IResource paste(IContainer destination, Shell shell) {
 		// TODO: Do this async to avoid blocking?
 		ResourceTransfer resTransfer = ResourceTransfer.getInstance();
 		IResource[] resourceData = (IResource[]) clipboard.getContents(resTransfer);
+		if (resourceData == null) {
+			return null;
+		}
 	
 		if (doCut) {
 			MoveResourcesOperation op = new MoveResourcesOperation(resourceData, destination.getFullPath(), "Cut file"+ (resourceData.length > 1 ? "s" : ""));
@@ -59,6 +62,7 @@ public class FileClipBoard {
 		}
 
 		clipboard.clearContents();
+		return resourceData[0];
 	}
 
 }

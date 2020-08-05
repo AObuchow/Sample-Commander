@@ -28,7 +28,9 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
@@ -84,7 +86,8 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 			@Override
 			public String getText(Object element) {
 				if (element instanceof IResource) {
-					if ((element instanceof IFolder || element instanceof IProject)&& element.equals(inputContainer.getParent())) {
+					if ((element instanceof IFolder || element instanceof IProject)
+							&& element.equals(inputContainer.getParent())) {
 						return "..";
 					}
 					return ((IResource) element).getName();
@@ -118,13 +121,14 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 			IStructuredSelection selection = (IStructuredSelection) event.getSelection();
 			if (selection.getFirstElement() instanceof IContainer) {
 				IContainer selectedDirectory = (IContainer) selection.getFirstElement();
-				
+
 				// Check if an editor already exists for the selected directory
 				IEditorReference[] editorRefs = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
 						.getEditorReferences();
 				List<IEditorReference> editorRefsList = Arrays.asList(editorRefs);
 				editorRefsList = editorRefsList.stream().filter(editorRef -> {
-					return FileManagerMatchingStrategy.staticMatches(editorRef, new ContainerEditorInput(selectedDirectory));
+					return FileManagerMatchingStrategy.staticMatches(editorRef,
+							new ContainerEditorInput(selectedDirectory));
 				}).collect(Collectors.toList());
 
 				if (!editorRefsList.isEmpty()) {
@@ -140,11 +144,11 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 				}
 			}
 		});
-		
+
 		int operations = DND.DROP_COPY | DND.DROP_MOVE;
-        Transfer[] transferTypes = new Transfer[]{ResourceTransfer.getInstance()};
+		Transfer[] transferTypes = new Transfer[] { ResourceTransfer.getInstance() };
 		this.viewer.addDropSupport(operations, transferTypes, new FileManagerDropListener(this));
-		this.viewer.addDragSupport(operations, transferTypes , new FileManagerDragListener(viewer));
+		this.viewer.addDragSupport(operations, transferTypes, new FileManagerDragListener(viewer));
 		this.viewer.getTable().setLinesVisible(false);
 		this.viewer.getTable().setHeaderVisible(true);
 		this.viewer.setInput(model);
@@ -179,7 +183,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 					} else {
 						return 1;
 					}
-				} 
+				}
 				return Comparator.comparing(IContainer::getName, String.CASE_INSENSITIVE_ORDER).compare((IContainer) e1,
 						(IContainer) e2);
 			}
@@ -229,7 +233,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 						.map(FileManagerEditor::resourceConverter).collect(Collectors.toList());
 			}
 		}
-		
+
 		if (parentFolder != null) {
 			filesInSelectedDir.add(parentFolder.getParent());
 		}
@@ -388,18 +392,18 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 
 	public void setSelection(IStructuredSelection aSelection) {
 		if (this.viewer != null) {
-			this.viewer.setSelection(aSelection);
+			this.viewer.setSelection(aSelection, true);
 		}
 	}
 
 	public void copy() {
 		internalCopy(false);
 	}
-	
+
 	public void cut() {
 		internalCopy(true);
 	}
-	
+
 	private void internalCopy(boolean doCut) {
 		List<IResource> selectedFilesList = (List<IResource>) this.viewer.getStructuredSelection().toList().stream()
 				.filter(selection -> selection instanceof IResource).collect(Collectors.toList());
@@ -409,7 +413,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 			if (doCut) {
 				Activator.getDefault().getClipboard().cut(selectedFiles);
 			} else {
-				Activator.getDefault().getClipboard().copy(selectedFiles);	
+				Activator.getDefault().getClipboard().copy(selectedFiles);
 			}
 		}
 	}
@@ -433,8 +437,27 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 	}
 
 	public void paste() {
-		Activator.getDefault().getClipboard().paste(inputContainer,
+		IResource pastedItem = Activator.getDefault().getClipboard().paste(inputContainer,
 				PlatformUI.getWorkbench().getDisplay().getActiveShell());
+
+		// This is disabled for now as it doesn't scroll to the selection and causes the
+		// pasted file to be played
+		// TODO: Make this a preference?
+		if (pastedItem != null && false) {
+			try {
+				// Select the first of the pasted items
+				List<IResource> itemInView = Arrays.asList(inputContainer.members()).stream()
+						.filter(res -> res.getName().equals(pastedItem.getName())).collect(Collectors.toList());
+				if (!itemInView.isEmpty()) {
+					this.setSelection(new StructuredSelection(itemInView.get(0)));
+				}
+
+			} catch (CoreException e) {
+				e.printStackTrace();
+			}
+
+		}
+
 	}
 
 	public Viewer getViewer() {
