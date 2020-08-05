@@ -10,11 +10,11 @@ import org.eclipse.swt.dnd.DragSourceEvent;
 import org.eclipse.swt.dnd.DragSourceListener;
 import org.eclipse.ui.part.ResourceTransfer;
 
-public class FileManagerListener implements DragSourceListener {
+public class FileManagerDragListener implements DragSourceListener {
 	
     private final TableViewer viewer;
 
-    public FileManagerListener(TableViewer viewer) {
+    public FileManagerDragListener(TableViewer viewer) {
         this.viewer = viewer;
     }
 
