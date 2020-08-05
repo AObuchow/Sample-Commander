@@ -141,7 +141,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 		int operations = DND.DROP_COPY | DND.DROP_MOVE;
         Transfer[] transferTypes = new Transfer[]{ResourceTransfer.getInstance()};
 		this.viewer.addDropSupport(operations, transferTypes, new FileManagerDropListener(this));
-		this.viewer.addDragSupport(operations, transferTypes , new FileManagerListener(viewer));
+		this.viewer.addDragSupport(operations, transferTypes , new FileManagerDragListener(viewer));
 		this.viewer.getTable().setLinesVisible(false);
 		this.viewer.getTable().setHeaderVisible(true);
 		this.viewer.setInput(model);
@@ -379,11 +379,24 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 	}
 
 	public void copy() {
-		List<IResource> filesToCopy = (List<IResource>) this.viewer.getStructuredSelection().toList().stream()
+		internalCopy(false);
+	}
+	
+	public void cut() {
+		internalCopy(true);
+	}
+	
+	private void internalCopy(boolean doCut) {
+		List<IResource> selectedFilesList = (List<IResource>) this.viewer.getStructuredSelection().toList().stream()
 				.filter(selection -> selection instanceof IResource).collect(Collectors.toList());
 
-		if (!filesToCopy.isEmpty()) {
-			Activator.getDefault().getClipboard().copy(filesToCopy.toArray(new IResource[filesToCopy.size()]));
+		if (!selectedFilesList.isEmpty()) {
+			IResource[] selectedFiles = selectedFilesList.toArray(new IResource[selectedFilesList.size()]);
+			if (doCut) {
+				Activator.getDefault().getClipboard().cut(selectedFiles);
+			} else {
+				Activator.getDefault().getClipboard().copy(selectedFiles);	
+			}
 		}
 	}
 
@@ -407,7 +420,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 
 	public void paste() {
 		Activator.getDefault().getClipboard().paste(inputContainer,
-				PlatformUI.getWorkbench().getDisplay().getActiveShell(), history);
+				PlatformUI.getWorkbench().getDisplay().getActiveShell());
 	}
 
 	public Viewer getViewer() {

@@ -22,8 +22,8 @@ public class FileManagerDropListener extends ViewerDropAdapter{
 	    
 	    @Override
 	    public boolean performDrop(Object data) {
-	    	IResource[] destination = (IResource[]) data;
-	    	MoveResourcesOperation op = new MoveResourcesOperation(destination, editor.getContainer().getFullPath(), "Move file"+ (destination.length > 1 ? "s" : ""));
+	    	IResource[] resourcesToMove = (IResource[]) data;
+	    	MoveResourcesOperation op = new MoveResourcesOperation(resourcesToMove, editor.getContainer().getFullPath(), "Move file"+ (resourcesToMove.length > 1 ? "s" : ""));
 	    	try {
 				PlatformUI.getWorkbench().getOperationSupport().getOperationHistory().execute(op, new NullProgressMonitor(), WorkspaceUndoUtil.getUIInfoAdapter(editor.getSite().getShell()));
 			} catch (ExecutionException e) {

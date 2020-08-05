@@ -13,7 +13,7 @@
    <extension
          point="org.eclipse.core.contenttype.contentTypes">
       <content-type
-            file-extensions=".mp3, .wav"
+            file-extensions=".mp3, .wav, .flac"
             id="com.aobuchow.sample.commander.content.type.audioFile"
             name="Audio File"
             priority="high">
@@ -79,17 +79,24 @@
       <handler
             class="com.aobuchow.sample.commander.handlers.CopyHandler"
             commandId="org.eclipse.ui.edit.copy">
-         <activeWhen>
-            <with
-                  variable="activeEditorId">
-               <equals
-                     value="com.aobuchow.sample.commander.editor1">
-               </equals>
-            </with>
-         </activeWhen>
          <class
                class="com.aobuchow.sample.commander.handlers.CopyHandler">
          </class>
+         <activeWhen>
+            <and>
+               <with
+                     variable="activeEditorId">
+                  <equals
+                        value="com.aobuchow.sample.commander.editor1">
+                  </equals>
+               </with>
+               <iterate>
+                  <instanceof
+                        value="org.eclipse.core.resources.IResource">
+                  </instanceof>
+               </iterate>
+            </and>
+         </activeWhen>
       </handler>
       <handler
             class="com.aobuchow.sample.commander.handlers.PasteHandler"
@@ -134,6 +141,28 @@
          </activeWhen>
          <class
                class="com.aobuchow.sample.commander.handlers.RedoHandler">
+         </class>
+      </handler>
+      <handler
+            class="com.aobuchow.sample.commander.handlers.CutHandler"
+            commandId="org.eclipse.ui.edit.cut">
+         <activeWhen>
+         <and>
+            <with
+                  variable="activeEditorId">
+               <equals
+                     value="com.aobuchow.sample.commander.editor1">
+               </equals>
+            </with>
+         <iterate>
+            <instanceof
+                  value="org.eclipse.core.resources.IResource">
+            </instanceof>
+         </iterate>
+         </and>
+         </activeWhen>
+         <class
+               class="com.aobuchow.sample.commander.handlers.CutHandler">
          </class>
       </handler>
    </extension>
