@@ -103,7 +103,6 @@ public class OpenResourceHandler extends AbstractHandler {
 		ISelectionService selectionService = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 
 		TreeSelection selection = (TreeSelection) selectionService.getSelection("org.eclipse.ui.navigator.ProjectExplorer");
-
 		if ((selection == null) || (selection.isEmpty())) {
 			return null;
 		}
