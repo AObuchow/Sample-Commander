@@ -6,7 +6,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -77,6 +80,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 	private IResourceChangeListener workspaceChangeListener;
 	private IOperationHistory history;
 	private IUndoContext undoContext;
+	private Map<IContainer, IResource> visitedDirectories = new HashMap<IContainer, IResource>();
 
 	@PostConstruct
 	@Override
@@ -439,15 +443,36 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 		}
 		try {
 			this.model = createModel(inputContainer);
-			viewer.getControl().getDisplay().asyncExec(() -> this.viewer.setInput(model));
+			viewer.getControl().getDisplay().syncExec(() -> this.viewer.setInput(model));
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
 	}
 
 	private void changeActiveContainer(IContainer container) {
+		IResource currentSelection = (IResource) this.viewer.getStructuredSelection().getFirstElement();
+		if (currentSelection != null) {
+			visitedDirectories.put(inputContainer, currentSelection);	
+		}
 		setInputFile(container);
 		refresh();
+		IResource lastSelectedFile = visitedDirectories.get(container);
+		if (lastSelectedFile != null) {
+
+			try {
+				IResource[] model = (IResource[]) inputContainer.members();
+				Optional<IResource> newSelection = Arrays.asList(model).stream()
+						.filter(resource -> resource.equals(lastSelectedFile)).findFirst();
+				newSelection.ifPresent(selection -> this.setSelection(new StructuredSelection(selection)));
+			} catch (CoreException e) {
+				e.printStackTrace();
+			}
+		} else {
+			if (inputContainer.getParent() != null) {
+				this.setSelection(new StructuredSelection(inputContainer.getParent()));
+			}
+		}
+
 		// TODO: These don't work?
 		setPartName(container.getName());
 		firePropertyChange(IWorkbenchPartConstants.PROP_PART_NAME);
