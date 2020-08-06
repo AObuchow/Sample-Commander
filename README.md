@@ -2,7 +2,7 @@
 
 Sample Commander is an application designed to assist in organizing audio files, also known as [samples](https://en.wikipedia.org/wiki/Sampling_(music)). 
 
-It is written as an eclipse plugin and is available as a standalone e4 RCP application or as an eclipse plugin.
+It is written as an Eclipse plugin but is available as a standalone e4 RCP application.
 
 ### Motivation
 
@@ -10,11 +10,12 @@ Sample Commander aims to offer the convenient sample browsing experience provide
 
 It takes inspiration from software such as:
 
-- **FL Studio:** provides the [browser](https://www.image-line.com/support/flstudio_online_manual/html/browser.htm), a single file tree to view a users sample library. It is convenient for finding sounds to use in a song, but limited in its ability to quickly reorganize the sample libraries structure.
+- **FL Studio:** provides a [file browser](https://www.image-line.com/support/flstudio_online_manual/html/browser.htm), a single file tree to view a users sample library. It is convenient for finding sounds to use in a song, but limited in its ability to quickly reorganize the sample libraries structure.
 
 - **Krusader:** A Qt based orthodox file manager. Provides excellent file mangement capabilities and workflow. 
 
 ## Features:
+- Navigate file directory's quickly with your keyboard
 
 - View multiple directory contents side-by-side
 
