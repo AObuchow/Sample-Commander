@@ -1,5 +1,7 @@
 package com.aobuchow.sample.commander.editor;
 
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -12,6 +14,7 @@ import javax.annotation.PostConstruct;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.IOperationHistory;
 import org.eclipse.core.commands.operations.IUndoContext;
+import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -82,8 +85,8 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 		this.viewer = new TableViewer(parent, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 		this.viewer.setContentProvider(ArrayContentProvider.getInstance());
 		this.viewer.setComparator(new ResourceComparator());
-		TableViewerColumn column = createColumnFor(viewer, "File");
-		column.setLabelProvider(new ColumnLabelProvider() {
+		TableViewerColumn nameColumn = createColumnFor(viewer, "File");
+		nameColumn.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
 				if (element instanceof IResource) {
@@ -106,6 +109,25 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 					return Activator.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "icons/folder.png").createImage();
 				}
 				return null;
+			}
+		});
+		
+		TableViewerColumn sizeColumn = createColumnFor(viewer, "Size");
+		sizeColumn.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+
+				IFileStore fileStore;
+				try {
+					if (element instanceof IFile) {
+						fileStore = org.eclipse.core.filesystem.EFS.getStore(((IFile) element).getLocationURI());
+						return humanReadableByteCountSI(fileStore.fetchInfo().getLength());
+					}
+
+				} catch (CoreException e) {
+					e.printStackTrace();
+				}
+				return "";
 			}
 		});
 		
@@ -184,10 +206,22 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 
 		this.setPartName(inputContainer.getName());
 	}
+	
+	public static String humanReadableByteCountSI(long bytes) {
+	    if (-1000 < bytes && bytes < 1000) {
+	        return bytes + " B";
+	    }
+	    CharacterIterator ci = new StringCharacterIterator("kMGTPE");
+	    while (bytes <= -999_950 || bytes >= 999_950) {
+	        bytes /= 1000;
+	        ci.next();
+	    }
+	    return String.format("%.1f %cB", bytes / 1000.0, ci.current());
+	}
 
 	private TableViewerColumn createColumnFor(TableViewer viewer, String label) {
 		TableViewerColumn column = new TableViewerColumn(viewer, SWT.NONE);
-		column.getColumn().setWidth(200);
+		column.getColumn().setWidth(400);
 		column.getColumn().setText(label);
 		column.getColumn().setMoveable(true);
 		return column;
