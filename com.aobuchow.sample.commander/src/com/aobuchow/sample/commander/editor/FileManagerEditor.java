@@ -28,7 +28,6 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
-import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
@@ -38,6 +37,8 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
@@ -105,6 +106,34 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 					return Activator.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "icons/folder.png").createImage();
 				}
 				return null;
+			}
+		});
+		
+		viewer.getControl().addKeyListener( new KeyListener() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+		
+			}
+			
+			@Override
+			public void keyPressed(KeyEvent e) {
+				// e.doit gets disabled regardless if successful as the beep it creates on Linux
+				// is annoying
+				switch(e.keyCode) {
+				case SWT.ARROW_RIGHT:
+					IStructuredSelection selection = viewer.getStructuredSelection();
+					if (selection.size() == 1 && selection.getFirstElement() instanceof IContainer) {
+						changeActiveContainer(Adapters.adapt(selection.getFirstElement(), IContainer.class));
+					}
+					e.doit = false;
+					break;
+				case SWT.ARROW_LEFT:
+					if (!(inputContainer instanceof IProject)) {
+						changeActiveContainer(inputContainer.getParent());
+					}
+					e.doit = false;
+					break;
+				}
 			}
 		});
 
