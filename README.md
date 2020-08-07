@@ -10,9 +10,9 @@ Sample Commander aims to offer the convenient sample browsing experience provide
 
 It takes inspiration from software such as:
 
-- **FL Studio:** A DAW that has a [file browser](https://www.image-line.com/support/flstudio_online_manual/html/browser.htm), which provides a single file tree to view the user's sample library. It is convenient for finding sounds to use in a song, but limited in its ability to quickly reorganize the sample libraries structure.
+- **[FL Studio](https://www.image-line.com/flstudio/):** A DAW that has a [file browser](https://www.image-line.com/support/flstudio_online_manual/html/browser.htm), which provides a single file tree to view the user's sample library. It is convenient for finding sounds to use in a song, but limited in its ability to quickly reorganize the sample libraries structure.
 
-- **Krusader:** A Qt based orthodox file manager. Provides excellent file mangement capabilities and workflow. 
+- **[Krusader](https://krusader.org/):** A Qt based orthodox file manager. Provides excellent file mangement capabilities and workflow. 
 
 ## Features:
 - Navigate file directory's quickly with your keyboard
