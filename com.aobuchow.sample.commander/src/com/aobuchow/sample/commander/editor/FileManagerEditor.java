@@ -240,6 +240,10 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 		public int compare(Viewer viewer, Object e1, Object e2) {
 			// both are folders/projects, projects go first otherwise sort alphabetically
 			if (e1 instanceof IContainer && e2 instanceof IContainer) {
+				// the parent directory (..) should always be at the top
+				if (((IContainer) e1).equals(inputContainer.getParent())) {
+					return -1;
+				}
 				if (!e1.getClass().equals(e2.getClass())) {
 					if (e1 instanceof IProject) {
 						return -1;
