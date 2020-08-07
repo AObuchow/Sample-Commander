@@ -314,7 +314,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 
 	@Focus
 	public void setFocus() {
-		// TODO: Remove?
+		this.viewer.getControl().setFocus();
 	}
 
 	@Override
