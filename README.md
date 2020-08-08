@@ -2,9 +2,9 @@
 
 Sample Commander is an application designed to assist in organizing audio files, also known as [samples](https://en.wikipedia.org/wiki/Sampling_(music)). 
 
-It is written as an Eclipse plugin but is available as a standalone e4 RCP application.
+It is written & available as an Eclipse IDE plugin but it will soon be available as a standalone e4 RCP application.
 
-### Motivation
+### 💡 Motivation
 
 Sample Commander aims to offer the convenient sample browsing experience provided in modern [DAW](https://en.wikipedia.org/wiki/Digital_audio_workstation)'s with an [orthodox file manager](https://en.wikipedia.org/wiki/File_manager#Orthodox_file_managers) interface.
 
@@ -15,17 +15,17 @@ It takes inspiration from software such as:
 - **[Krusader](https://krusader.org/):** A Qt based orthodox file manager. Provides excellent file mangement capabilities and workflow. 
 
 ## Features:
-- Navigate file directory's quickly with your keyboard
+- ⌨️ Navigate file directory's quickly with your keyboard
 
-- View multiple directory contents side-by-side
+- 🗄️ View multiple directory contents side-by-side
 
-- Supports common file operations (cut, copy, delete, etc.) between directories. 
+- 📂 Supports common file operations (cut, copy, delete, etc.) between directories. 
 
-- Audio playback for .wav, .mp3 and .flac is supported and can be started by selecting a supported file.  
+- 🎵 Audio playback for .wav, .mp3 and .flac is supported and can be started by selecting a supported file.  
 
-- Git integration to keep track of changes to your audio library
+- <img src="https://img.icons8.com/color/48/000000/git.png" width="24" height ="24"> Git integration to keep track of changes to your audio library
 
-## Screenshots:
+## 📸 Screenshots:
 
 ![how_it_looks_1.png](./images/how_it_looks_2.png)
 
@@ -35,7 +35,7 @@ It takes inspiration from software such as:
 
 `https://raw.githubusercontent.com/AObuchow/Sample-Commander/updatesite/updatesite/`
 
-## Libraries used:
+## 📚 Libraries used:
 
 - [java-stream-player](https://github.com/goxr3plus/java-stream-player) is used for audio playback
 
