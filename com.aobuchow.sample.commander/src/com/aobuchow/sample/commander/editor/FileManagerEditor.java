@@ -248,8 +248,6 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 	}
 
 	private void setInputFile(IContainer inputContainer) {
-		// should be
-		// this.model.setInpout(inputContainer)
 		this.inputContainer = inputContainer;
 		setInput(new ContainerEditorInput(inputContainer));
 		this.setTitleToolTip(inputContainer.getFullPath().toString());
