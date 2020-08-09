@@ -4,7 +4,6 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
-import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.undo.MoveResourcesOperation;
@@ -15,7 +14,7 @@ public class FileManagerDropListener extends ViewerDropAdapter{
 	
 	  private final FileManagerEditor editor;
 
-	    public FileManagerDropListener(FileManagerEditor editor) {
+		public FileManagerDropListener(FileManagerEditor editor) {
 	        super(editor.getViewer());
 	        this.editor = editor;
 	    }
