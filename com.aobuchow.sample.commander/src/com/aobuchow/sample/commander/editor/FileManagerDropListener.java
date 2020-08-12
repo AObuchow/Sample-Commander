@@ -44,6 +44,9 @@ public class FileManagerDropListener extends ViewerDropAdapter {
 
 	@Override
 	public boolean performDrop(Object data) {
+		if (editor.isFlatMode()) {
+			return false;
+		}
 		IResource[] resourcesToMove = (IResource[]) data;
 		MoveResourcesOperation op = new MoveResourcesOperation(resourcesToMove, targetContainer.getFullPath(),
 				"Move file" + (resourcesToMove.length > 1 ? "s" : ""));
