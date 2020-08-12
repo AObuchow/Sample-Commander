@@ -22,7 +22,10 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -66,6 +69,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 	private IOperationHistory history;
 	private IUndoContext undoContext;
 	private Map<IContainer, IResource> visitedDirectories = new HashMap<IContainer, IResource>();
+	private boolean flatMode = false;
 
 	@PostConstruct
 	@Override
@@ -373,6 +377,19 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 
 	public IContainer getContainer() {
 		return inputContainer;
+	}
+
+	public void toggleFlatMode() {
+		this.flatMode = !flatMode;
+		
+		// This blocks the ui thread :/
+		// TODO: FileMangerContentProvider should be async/deffered?
+		viewer.getControl().getDisplay()
+				.asyncExec(() -> this.viewer.setContentProvider(new FileManagerContentProvider(flatMode)));
+	}
+
+	public boolean isFlatMode() {
+		return this.flatMode;
 	}
 
 }

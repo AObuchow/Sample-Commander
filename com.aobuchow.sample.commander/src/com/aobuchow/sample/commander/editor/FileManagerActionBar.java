@@ -1,28 +1,35 @@
 package com.aobuchow.sample.commander.editor;
 
-import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.IEditorActionBarContributor;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.actions.ActionFactory;
+import org.eclipse.ui.part.EditorActionBarContributor;
 
-public class FileManagerActionBar implements IEditorActionBarContributor {
+import com.aobuchow.sample.commander.Activator;
 
-	@Override
-	public void init(IActionBars bars, IWorkbenchPage page) {
+public class FileManagerActionBar extends EditorActionBarContributor {
 
-	}
+	private IEditorPart editor;
+	private FlatDirectoryLayoutAction flatDirectory;
 
 	@Override
 	public void setActiveEditor(IEditorPart targetEditor) {
-		// TODO Auto-generated method stub
+		this.editor = targetEditor;
+		super.setActiveEditor(targetEditor);
 
+		if (targetEditor instanceof FileManagerEditor) {
+			flatDirectory.setEnabled(true);
+			flatDirectory.setEditor((FileManagerEditor) targetEditor);
+		} else {
+			flatDirectory.setEnabled(false);
+		}
 	}
 
 	@Override
-	public void dispose() {
-		// TODO Auto-generated method stub
-
+	public void contributeToToolBar(IToolBarManager toolBarManager) {
+		FileManagerEditor ed = (FileManagerEditor) editor;
+		flatDirectory = new FlatDirectoryLayoutAction(ed);
+		toolBarManager.add(flatDirectory);
+		super.contributeToToolBar(toolBarManager);
 	}
 
 }

@@ -14,7 +14,12 @@ public class PasteHandler extends AbstractHandler {
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IWorkbenchPart part = HandlerUtil.getActivePart(event);
 		if (part instanceof FileManagerEditor) {
-			((FileManagerEditor) part).paste();
+			FileManagerEditor editor = ((FileManagerEditor) part);
+			// TODO: Paste shouldn't even be enabled when editor is in flat mode..
+			if (!editor.isFlatMode()) {
+				editor.paste();	
+			}
+			
 		}
 		return null;
 	}

@@ -36,7 +36,16 @@ public class AudioPlayer extends StreamPlayer {
 		if (!(file.exists())) {
 			return false;
 		}
+		
+		String fileName = file.getName();
+		if (fileName.startsWith(".")) {
+			return false;
+		}
+		
 		String fileExtension = file.getFileExtension();
+		if (fileExtension == null) {
+			return false;
+		}
 		return fileExtension.equals("mp3") || fileExtension.equals("wav") || fileExtension.equals("flac");
 	}
 
