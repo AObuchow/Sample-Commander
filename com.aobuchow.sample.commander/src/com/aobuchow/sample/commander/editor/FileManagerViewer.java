@@ -50,7 +50,7 @@ public class FileManagerViewer extends TableViewer {
 			}
 		});
 
-		TableViewerColumn nameColumn = createColumnFor(this, Messages.FileManagerViewer_ColumnText_Name, 500);
+		TableViewerColumn nameColumn = createColumnFor(this, Messages.FileManagerViewer_ColumnText_Name, 450);
 		nameColumn.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -287,6 +287,10 @@ public class FileManagerViewer extends TableViewer {
 
 			// both are audio files, sort by size
 			if (e1 instanceof AudioFile && e2 instanceof AudioFile) {
+				
+				
+
+				
 				try {
 					IFileStore fileStore1 = org.eclipse.core.filesystem.EFS.getStore(((AudioFile) e1).getLocationURI());
 					IFileStore fileStore2 = org.eclipse.core.filesystem.EFS.getStore(((AudioFile) e2).getLocationURI());
