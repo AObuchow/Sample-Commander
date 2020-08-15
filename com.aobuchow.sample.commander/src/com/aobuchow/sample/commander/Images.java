@@ -10,4 +10,8 @@ public interface Images {
 	
 	public static final String AUDIO_FILE = "icons/AudioFile3_16.png";
 
+	public static final String LIST = "icons/view-list_32.png";
+
+	public static final String FOLDER_OUTLINE = "icons/folder_hero_32.png";
+
 }
