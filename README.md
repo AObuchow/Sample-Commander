@@ -27,7 +27,7 @@ It takes inspiration from software such as:
 
 ## 📸 Screenshots:
 
-![how_it_looks_1.png](./images/how_it_looks_2.png)
+![how_it_looks_1.png](./images/how_it_looks_1.png)
 
 ## 📥 Installation
 
