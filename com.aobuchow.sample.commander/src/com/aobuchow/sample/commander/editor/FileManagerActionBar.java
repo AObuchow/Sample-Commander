@@ -4,12 +4,11 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.part.EditorActionBarContributor;
 
-import com.aobuchow.sample.commander.Activator;
-
 public class FileManagerActionBar extends EditorActionBarContributor {
 
 	private IEditorPart editor;
 	private FlatDirectoryLayoutAction flatDirectory;
+	private AutoPlayToggleAction autoPlay;
 
 	@Override
 	public void setActiveEditor(IEditorPart targetEditor) {
@@ -17,18 +16,17 @@ public class FileManagerActionBar extends EditorActionBarContributor {
 		super.setActiveEditor(targetEditor);
 
 		if (targetEditor instanceof FileManagerEditor) {
-			flatDirectory.setEnabled(true);
 			flatDirectory.setEditor((FileManagerEditor) targetEditor);
-		} else {
-			flatDirectory.setEnabled(false);
-		}
+		} 
 	}
 
 	@Override
 	public void contributeToToolBar(IToolBarManager toolBarManager) {
 		FileManagerEditor ed = (FileManagerEditor) editor;
 		flatDirectory = new FlatDirectoryLayoutAction(ed);
+		autoPlay = new AutoPlayToggleAction();
 		toolBarManager.add(flatDirectory);
+		toolBarManager.add(autoPlay);
 		super.contributeToToolBar(toolBarManager);
 	}
 

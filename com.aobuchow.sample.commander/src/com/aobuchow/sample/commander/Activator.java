@@ -10,8 +10,10 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import com.goxr3plus.streamplayer.stream.ThreadFactoryWithNamePrefix;
-// TODO: Extend AbstractUIPlugin?
+
 public class Activator extends AbstractUIPlugin {
+	
+	public static final String PREFERENCES_NODE_QUALIFER = "com.aobuchow.sample.commander.preferences";
 	
 	// The shared instance
 	private static Activator plugin;

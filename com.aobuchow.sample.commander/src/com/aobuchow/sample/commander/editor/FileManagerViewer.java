@@ -4,7 +4,6 @@ import java.text.CharacterIterator;
 import java.text.SimpleDateFormat;
 import java.text.StringCharacterIterator;
 import java.util.Comparator;
-import java.util.TimeZone;
 
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IContainer;
@@ -13,11 +12,14 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
@@ -26,18 +28,29 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.TableColumn;
 
 import com.aobuchow.sample.commander.Activator;
+import com.aobuchow.sample.commander.Images;
 import com.aobuchow.sample.commander.resources.AudioFile;
 
 public class FileManagerViewer extends TableViewer {
-	
+
 	boolean sortReversed = false;
+	private boolean autoPlayEnabled;
 
 	public FileManagerViewer(Composite parent) {
 		super(parent, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 
 		this.setContentProvider(new FileManagerContentProvider(false));
 		this.setComparator(new NameComparator(sortReversed));
-		TableViewerColumn nameColumn = createColumnFor(this, Messages.FileManagerViewer_ColumnText_Name, 400);
+		this.addSelectionChangedListener((event) -> {
+			if (event.getStructuredSelection().size() == 1) {
+				Object selection = event.getStructuredSelection().getFirstElement();
+				if (selection instanceof AudioFile && autoPlayEnabled) {
+					Activator.getDefault().getAudioPlayer().play((AudioFile) selection);
+				}
+			}
+		});
+
+		TableViewerColumn nameColumn = createColumnFor(this, Messages.FileManagerViewer_ColumnText_Name, 500);
 		nameColumn.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -54,11 +67,10 @@ public class FileManagerViewer extends TableViewer {
 			@Override
 			public Image getImage(Object element) {
 				if (element instanceof AudioFile) {
-					return Activator.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "icons/AudioFile3_16.png") //$NON-NLS-1$
-							.createImage();
+					return Activator.imageDescriptorFromPlugin(Activator.PLUGIN_ID, Images.AUDIO_FILE).createImage();
 				}
 				if (element instanceof IContainer) {
-					return Activator.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "icons/folder.png").createImage(); //$NON-NLS-1$
+					return Activator.imageDescriptorFromPlugin(Activator.PLUGIN_ID, Images.FOLDER).createImage();
 				}
 				return null;
 			}
@@ -75,11 +87,11 @@ public class FileManagerViewer extends TableViewer {
 						fileStore = org.eclipse.core.filesystem.EFS.getStore(((IFile) element).getLocationURI());
 						return humanReadableByteCountSI(fileStore.fetchInfo().getLength());
 					}
-					
+
 					if (element instanceof IContainer) {
 						int numberOfItems = ((IContainer) element).members().length;
 						String plural = numberOfItems != 0 ? "s" : "";
-						return  numberOfItems + " item" + plural;
+						return numberOfItems + " item" + plural;
 					}
 
 				} catch (CoreException e) {
@@ -88,7 +100,7 @@ public class FileManagerViewer extends TableViewer {
 				return ""; //$NON-NLS-1$
 			}
 		});
-		
+
 		TableViewerColumn dateColumn = createColumnFor(this, Messages.FileManagerViewer_ColumnText_Date, 300);
 		dateColumn.setLabelProvider(new ColumnLabelProvider() {
 			@Override
@@ -99,7 +111,7 @@ public class FileManagerViewer extends TableViewer {
 						// Don't show for parent
 						return ""; //$NON-NLS-1$
 					}
-					
+
 					SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy hh:mm a"); //$NON-NLS-1$
 					return dateFormat.format(((IResource) element).getLocation().toFile().lastModified());
 				}
@@ -107,56 +119,65 @@ public class FileManagerViewer extends TableViewer {
 				return ""; //$NON-NLS-1$
 			}
 		});
-		
-        Listener sortListener = new Listener() {
-            public void handleEvent(Event e) {
-            	// TODO: This could probably be refactored?
-                TableColumn column = (TableColumn) e.widget;
-                // A column should always sort in normal order on first click
-            	if (Math.max(column.getText().indexOf('▲'), column.getText().indexOf('▼')) == -1) {
-            		sortReversed = false;
-            	}
-                
-                String direction = sortReversed ?   "▲" :"▼"; //$NON-NLS-1$ //$NON-NLS-2$
-            	
-                if (column == sizeColumn.getColumn()) {
-                	FileManagerViewer.this.setComparator(new SizeComparator(sortReversed));
-                	column.setText(Messages.FileManagerViewer_ColumnText_Size + " " + direction);
-                	nameColumn.getColumn().setText(Messages.FileManagerViewer_ColumnText_Name);
-                	dateColumn.getColumn().setText(Messages.FileManagerViewer_ColumnText_Date);
-                }
-                if (column == nameColumn.getColumn()) {
-                	FileManagerViewer.this.setComparator(new NameComparator(sortReversed));
-                	column.setText(Messages.FileManagerViewer_ColumnText_Name + " " + direction);
-                	dateColumn.getColumn().setText(Messages.FileManagerViewer_ColumnText_Date);
-                	sizeColumn.getColumn().setText(Messages.FileManagerViewer_ColumnText_Size);
-                }
-                if (column == dateColumn.getColumn()) {
-                	FileManagerViewer.this.setComparator(new DateComparator(sortReversed));
-                	column.setText(Messages.FileManagerViewer_ColumnText_Date + " " + direction);
-                	nameColumn.getColumn().setText(Messages.FileManagerViewer_ColumnText_Name);
-                	sizeColumn.getColumn().setText(Messages.FileManagerViewer_ColumnText_Size);
-                }
-                FileManagerViewer.this.update(FileManagerViewer.this, null);
-                sortReversed = !sortReversed;
-            }
-        };
-		
-        sizeColumn.getColumn().addListener(SWT.Selection, sortListener);
+
+		Listener sortListener = new Listener() {
+			public void handleEvent(Event e) {
+				// TODO: This could probably be refactored?
+				TableColumn column = (TableColumn) e.widget;
+				// A column should always sort in normal order on first click
+				if (Math.max(column.getText().indexOf('▲'), column.getText().indexOf('▼')) == -1) {
+					sortReversed = false;
+				}
+
+				String direction = sortReversed ? "▲" : "▼"; //$NON-NLS-1$ //$NON-NLS-2$
+				if (column == sizeColumn.getColumn()) {
+					FileManagerViewer.this.setComparator(new SizeComparator(sortReversed));
+					column.setText(Messages.FileManagerViewer_ColumnText_Size + " " + direction);
+					nameColumn.getColumn().setText(Messages.FileManagerViewer_ColumnText_Name);
+					dateColumn.getColumn().setText(Messages.FileManagerViewer_ColumnText_Date);
+				}
+				if (column == nameColumn.getColumn()) {
+					FileManagerViewer.this.setComparator(new NameComparator(sortReversed));
+					column.setText(Messages.FileManagerViewer_ColumnText_Name + " " + direction);
+					dateColumn.getColumn().setText(Messages.FileManagerViewer_ColumnText_Date);
+					sizeColumn.getColumn().setText(Messages.FileManagerViewer_ColumnText_Size);
+				}
+				if (column == dateColumn.getColumn()) {
+					FileManagerViewer.this.setComparator(new DateComparator(sortReversed));
+					column.setText(Messages.FileManagerViewer_ColumnText_Date + " " + direction);
+					nameColumn.getColumn().setText(Messages.FileManagerViewer_ColumnText_Name);
+					sizeColumn.getColumn().setText(Messages.FileManagerViewer_ColumnText_Size);
+				}
+				FileManagerViewer.this.update(FileManagerViewer.this, null);
+				sortReversed = !sortReversed;
+			}
+		};
+
+		sizeColumn.getColumn().addListener(SWT.Selection, sortListener);
 		nameColumn.getColumn().addListener(SWT.Selection, sortListener);
 		dateColumn.getColumn().addListener(SWT.Selection, sortListener);
 
-		this.addSelectionChangedListener((event) -> {
-			if (event.getStructuredSelection().size() == 1) {
-				Object selection = event.getStructuredSelection().getFirstElement();
-				if (selection instanceof AudioFile) {
-					Activator.getDefault().getAudioPlayer().play((AudioFile) selection);
+		super.getTable().setLinesVisible(false);
+		this.getTable().setHeaderVisible(true);
+
+		initPreferenceListeners();
+	}
+
+	private void initPreferenceListeners() {
+		IEclipsePreferences preferences = InstanceScope.INSTANCE.getNode(Activator.PREFERENCES_NODE_QUALIFER);
+		autoPlayEnabled = preferences.getBoolean(AutoPlayToggleAction.AUTO_PLAY_PREFERENCE_KEY, true);
+		preferences.addPreferenceChangeListener(new IPreferenceChangeListener() {
+			@Override
+			public void preferenceChange(PreferenceChangeEvent event) {
+				if (event.getKey() == AutoPlayToggleAction.AUTO_PLAY_PREFERENCE_KEY) {
+					if (event.getNewValue().equals("false")) {
+						autoPlayEnabled = false;
+					} else {
+						autoPlayEnabled = true;
+					}
 				}
 			}
 		});
-
-		super.getTable().setLinesVisible(false);
-		this.getTable().setHeaderVisible(true);
 	}
 
 	public static String humanReadableByteCountSI(long bytes) {
@@ -178,9 +199,10 @@ public class FileManagerViewer extends TableViewer {
 		column.getColumn().setMoveable(true);
 		return column;
 	}
-	
-	// TODO: Refactor all of these by providing a method to run for the three comparison cases?
-	
+
+	// TODO: Refactor all of these by providing a method to run for the three
+	// comparison cases?
+
 	public class DateComparator extends ReversableViewerComparator {
 		public DateComparator(boolean reverse) {
 			super(reverse);
@@ -201,7 +223,7 @@ public class FileManagerViewer extends TableViewer {
 						return 1;
 					}
 				}
-				
+
 				long v1 = ((IFolder) e1).getLocation().toFile().lastModified();
 				long v2 = ((IFolder) e2).getLocation().toFile().lastModified();
 				return v1 < v2 ? -1 : v1 > v2 ? +1 : 0;
@@ -224,7 +246,7 @@ public class FileManagerViewer extends TableViewer {
 			return 0;
 		}
 	}
-	
+
 	public class SizeComparator extends ReversableViewerComparator {
 		public SizeComparator(boolean reverse) {
 			super(reverse);
@@ -245,11 +267,10 @@ public class FileManagerViewer extends TableViewer {
 						return 1;
 					}
 				}
-				int v1;
-				int v2;
+
 				try {
-					v1 = ((IContainer) e1).members().length;
-					v2 = ((IContainer) e2).members().length ;
+					int v1 = ((IContainer) e1).members().length;
+					int v2 = ((IContainer) e2).members().length;
 					return v1 < v2 ? +1 : v1 > v2 ? -1 : 0;
 				} catch (CoreException e) {
 					e.printStackTrace();
@@ -266,16 +287,15 @@ public class FileManagerViewer extends TableViewer {
 
 			// both are audio files, sort by size
 			if (e1 instanceof AudioFile && e2 instanceof AudioFile) {
-					IFileStore fileStore1;
-					try {
-						fileStore1 = org.eclipse.core.filesystem.EFS.getStore(((AudioFile) e1).getLocationURI());
-						IFileStore fileStore2 = org.eclipse.core.filesystem.EFS.getStore(((AudioFile) e2).getLocationURI());
-						long v1 = fileStore1.fetchInfo().getLength();
-						long v2 = fileStore2.fetchInfo().getLength();
-						return v1 < v2 ? +1 : v1 > v2 ? -1 : 0;
-					} catch (CoreException e) {
-						e.printStackTrace();
-					}
+				try {
+					IFileStore fileStore1 = org.eclipse.core.filesystem.EFS.getStore(((AudioFile) e1).getLocationURI());
+					IFileStore fileStore2 = org.eclipse.core.filesystem.EFS.getStore(((AudioFile) e2).getLocationURI());
+					long v1 = fileStore1.fetchInfo().getLength();
+					long v2 = fileStore2.fetchInfo().getLength();
+					return v1 < v2 ? +1 : v1 > v2 ? -1 : 0;
+				} catch (CoreException e) {
+					e.printStackTrace();
+				}
 
 			}
 			return 0;
