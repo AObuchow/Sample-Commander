@@ -5,27 +5,42 @@ import java.text.SimpleDateFormat;
 import java.text.StringCharacterIterator;
 import java.util.Comparator;
 
+import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.ColumnViewerEditor;
+import org.eclipse.jface.viewers.ColumnViewerEditorActivationEvent;
+import org.eclipse.jface.viewers.ColumnViewerEditorActivationStrategy;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
+import org.eclipse.jface.viewers.TableViewerEditor;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.ide.undo.MoveResourcesOperation;
+import org.eclipse.ui.ide.undo.WorkspaceUndoUtil;
 
 import com.aobuchow.sample.commander.Activator;
 import com.aobuchow.sample.commander.Images;
@@ -35,6 +50,8 @@ public class FileManagerViewer extends TableViewer {
 
 	boolean sortReversed = false;
 	private boolean autoPlayEnabled;
+	private CellEditor nameCellEditor;
+	private TableViewerColumn nameColumn;
 
 	public FileManagerViewer(Composite parent) {
 		super(parent, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
@@ -50,7 +67,7 @@ public class FileManagerViewer extends TableViewer {
 			}
 		});
 
-		TableViewerColumn nameColumn = createColumnFor(this, Messages.FileManagerViewer_ColumnText_Name, 450);
+		nameColumn = createColumnFor(this, Messages.FileManagerViewer_ColumnText_Name, 450);
 		nameColumn.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -90,8 +107,8 @@ public class FileManagerViewer extends TableViewer {
 
 					if (element instanceof IContainer) {
 						int numberOfItems = ((IContainer) element).members().length;
-						String plural = numberOfItems != 0 ? "s" : "";
-						return numberOfItems + " item" + plural;
+						String plural = numberOfItems != 0 ? "s" : ""; //$NON-NLS-1$ //$NON-NLS-2$
+						return numberOfItems + " item" + plural; //$NON-NLS-1$
 					}
 
 				} catch (CoreException e) {
@@ -132,19 +149,19 @@ public class FileManagerViewer extends TableViewer {
 				String direction = sortReversed ? "▲" : "▼"; //$NON-NLS-1$ //$NON-NLS-2$
 				if (column == sizeColumn.getColumn()) {
 					FileManagerViewer.this.setComparator(new SizeComparator(sortReversed));
-					column.setText(Messages.FileManagerViewer_ColumnText_Size + " " + direction);
+					column.setText(Messages.FileManagerViewer_ColumnText_Size + " " + direction); //$NON-NLS-1$
 					nameColumn.getColumn().setText(Messages.FileManagerViewer_ColumnText_Name);
 					dateColumn.getColumn().setText(Messages.FileManagerViewer_ColumnText_Date);
 				}
 				if (column == nameColumn.getColumn()) {
 					FileManagerViewer.this.setComparator(new NameComparator(sortReversed));
-					column.setText(Messages.FileManagerViewer_ColumnText_Name + " " + direction);
+					column.setText(Messages.FileManagerViewer_ColumnText_Name + " " + direction); //$NON-NLS-1$
 					dateColumn.getColumn().setText(Messages.FileManagerViewer_ColumnText_Date);
 					sizeColumn.getColumn().setText(Messages.FileManagerViewer_ColumnText_Size);
 				}
 				if (column == dateColumn.getColumn()) {
 					FileManagerViewer.this.setComparator(new DateComparator(sortReversed));
-					column.setText(Messages.FileManagerViewer_ColumnText_Date + " " + direction);
+					column.setText(Messages.FileManagerViewer_ColumnText_Date + " " + direction); //$NON-NLS-1$
 					nameColumn.getColumn().setText(Messages.FileManagerViewer_ColumnText_Name);
 					sizeColumn.getColumn().setText(Messages.FileManagerViewer_ColumnText_Size);
 				}
@@ -160,7 +177,65 @@ public class FileManagerViewer extends TableViewer {
 		super.getTable().setLinesVisible(false);
 		this.getTable().setHeaderVisible(true);
 
+		setupColumnEditingSupport(nameColumn);
+
 		initPreferenceListeners();
+	}
+
+	private void setupColumnEditingSupport(TableViewerColumn nameColumn) {
+		ColumnViewerEditorActivationStrategy actSupport = new ColumnViewerEditorActivationStrategy(this) {
+			@Override
+			protected boolean isEditorActivationEvent(ColumnViewerEditorActivationEvent event) {
+				return event.eventType == ColumnViewerEditorActivationEvent.TRAVERSAL
+						// Disabled double click rename for folders as it interferes with navigation
+						|| (event.eventType == ColumnViewerEditorActivationEvent.MOUSE_DOUBLE_CLICK_SELECTION
+								&& ((ViewerCell) event.getSource()).getElement() instanceof IFile)
+						|| event.eventType == ColumnViewerEditorActivationEvent.PROGRAMMATIC;
+			}
+
+		};
+
+		// TODO: Tabbing doesn't work?
+		int feature = ColumnViewerEditor.TABBING_VERTICAL | ColumnViewerEditor.KEYBOARD_ACTIVATION
+				| ColumnViewerEditor.TABBING_CYCLE_IN_VIEWER;
+
+		TableViewerEditor.create(this, actSupport, feature);
+
+		nameCellEditor = new FileNameCellEditor((Composite) this.getControl());
+		nameColumn.setEditingSupport(
+				new TextGetSetEditingSupport<>(this, IResource.class, IResource::getName, (resource, newName) -> {
+					if (!(resource instanceof IResource)) {
+						return;
+					}
+					rename(resource, newName);
+				}, nameCellEditor));
+	}
+
+	public void renameSelection() {
+		IStructuredSelection sel = (IStructuredSelection) this.getSelection();
+		if (sel.size() > 1) {
+			return;
+		}
+		IResource selection = Adapters.adapt(sel.getFirstElement(), IResource.class);
+		if (selection != null) {
+			nameColumn.getViewer().editElement(selection, 0);
+		}
+	}
+
+	private void rename(IResource resource, String newName) {
+		IPath newPath = resource.getFullPath().removeLastSegments(1).append(newName);
+		if (newPath.equals(resource.getFullPath())) {
+			return;
+		}
+
+		MoveResourcesOperation op = new MoveResourcesOperation(resource, newPath,
+				Messages.FileManagerViewer_RenameLabel6 + resource.getName());
+		try {
+			PlatformUI.getWorkbench().getOperationSupport().getOperationHistory().execute(op, new NullProgressMonitor(),
+					WorkspaceUndoUtil.getUIInfoAdapter(this.getControl().getShell()));
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void initPreferenceListeners() {
@@ -170,7 +245,7 @@ public class FileManagerViewer extends TableViewer {
 			@Override
 			public void preferenceChange(PreferenceChangeEvent event) {
 				if (event.getKey() == AutoPlayToggleAction.AUTO_PLAY_PREFERENCE_KEY) {
-					if (event.getNewValue().equals("false")) {
+					if (event.getNewValue().equals("false")) { //$NON-NLS-1$
 						autoPlayEnabled = false;
 					} else {
 						autoPlayEnabled = true;
@@ -178,6 +253,38 @@ public class FileManagerViewer extends TableViewer {
 				}
 			}
 		});
+	}
+
+	public boolean copy() {
+		if (nameCellEditor.isActivated()) {
+			((Text) nameCellEditor.getControl()).copy();
+			return true;
+		}
+		return false;
+	}
+
+	public boolean cut() {
+		if (nameCellEditor.isActivated()) {
+			((Text) nameCellEditor.getControl()).cut();
+			return true;
+		}
+		return false;
+	}
+
+	public boolean paste() {
+		if (nameCellEditor.isActivated()) {
+			((Text) nameCellEditor.getControl()).paste();
+			return true;
+		}
+		return false;
+	}
+
+	public boolean delete() {
+		if (nameCellEditor.isActivated()) {
+			((Text) nameCellEditor.getControl()).clearSelection();
+			return true;
+		}
+		return false;
 	}
 
 	public static String humanReadableByteCountSI(long bytes) {
@@ -287,10 +394,7 @@ public class FileManagerViewer extends TableViewer {
 
 			// both are audio files, sort by size
 			if (e1 instanceof AudioFile && e2 instanceof AudioFile) {
-				
-				
 
-				
 				try {
 					IFileStore fileStore1 = org.eclipse.core.filesystem.EFS.getStore(((AudioFile) e1).getLocationURI());
 					IFileStore fileStore2 = org.eclipse.core.filesystem.EFS.getStore(((AudioFile) e2).getLocationURI());
