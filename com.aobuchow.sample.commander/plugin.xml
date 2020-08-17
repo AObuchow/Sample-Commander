@@ -170,6 +170,28 @@
                class="com.aobuchow.sample.commander.handlers.CutHandler">
          </class>
       </handler>
+      <handler
+            class="com.aobuchow.sample.commander.handlers.RenameHandler"
+            commandId="org.eclipse.ui.edit.rename">
+         <activeWhen>
+            <and>
+               <with
+                     variable="activeEditorId">
+                  <equals
+                        value="com.aobuchow.sample.commander.editor1">
+                  </equals>
+               </with>
+               <iterate>
+                  <instanceof
+                        value="org.eclipse.core.resources.IResource">
+                  </instanceof>
+               </iterate>
+            </and>
+         </activeWhen>
+         <class
+               class="com.aobuchow.sample.commander.handlers.RenameHandler">
+         </class>
+      </handler>
    </extension>
    <extension
          point="org.eclipse.ui.elementFactories">

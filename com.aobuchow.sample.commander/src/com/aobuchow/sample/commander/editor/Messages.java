@@ -8,6 +8,7 @@ public class Messages extends NLS {
 	public static String FileManagerViewer_ColumnText_Date;
 	public static String FileManagerViewer_ColumnText_Name;
 	public static String FileManagerViewer_ColumnText_Size;
+	public static String FileManagerViewer_RenameLabel6;
 	public static String FlatDirectoryLayoutAction_Text;
 	static {
 		// initialize resource bundle

@@ -22,10 +22,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -249,6 +246,7 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 		actionBars.updateActionBars();
 
 		Activator.getDefault().initClipBoard(site.getWorkbenchWindow().getShell().getDisplay());
+
 	}
 
 	private void setInputFile(IContainer inputContainer) {
@@ -262,9 +260,11 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 	}
 
 	public void delete() {
-		DeleteResourceAction action = new DeleteResourceAction(getSite());
-		action.selectionChanged(this.viewer.getStructuredSelection());
-		action.run();
+		if (!viewer.delete()) {
+			DeleteResourceAction action = new DeleteResourceAction(getSite());
+			action.selectionChanged(this.viewer.getStructuredSelection());
+			action.run();			
+		}
 	}
 
 	public void refreshViewerInput() {
@@ -308,11 +308,15 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 	}
 
 	public void copy() {
-		internalCopy(false);
+		if (!viewer.copy()) {
+			internalCopy(false);
+		}
 	}
 
 	public void cut() {
-		internalCopy(true);
+		if (!viewer.cut()) {
+			internalCopy(true);
+		}
 	}
 
 	private void internalCopy(boolean doCut) {
@@ -348,6 +352,10 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 	}
 
 	public void paste() {
+		if (viewer.paste()) {
+			return;
+		}
+
 		IResource pastedItem = Activator.getDefault().getClipboard().paste(inputContainer,
 				PlatformUI.getWorkbench().getDisplay().getActiveShell());
 
@@ -368,7 +376,6 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 			}
 
 		}
-
 	}
 
 	public Viewer getViewer() {
@@ -381,15 +388,19 @@ public class FileManagerEditor extends EditorPart implements IEditorPart {
 
 	public void toggleFlatMode() {
 		this.flatMode = !flatMode;
-		
+
 		// This blocks the ui thread :/
-		// TODO: FileMangerContentProvider should be async/deffered?
+		// TODO: FileManagerContentProvider should be async/deffered?
 		viewer.getControl().getDisplay()
 				.asyncExec(() -> this.viewer.setContentProvider(new FileManagerContentProvider(flatMode)));
 	}
 
 	public boolean isFlatMode() {
 		return this.flatMode;
+	}
+
+	public void rename() {
+		viewer.renameSelection();
 	}
 
 }
