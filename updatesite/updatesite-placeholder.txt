@@ -1,3 +1,0 @@
-This is a placeholder file to make sure there is an "updatesite" folder.
-
-This is (for now) required so that the updatesite can be pushed to the corresponding build-branch.
