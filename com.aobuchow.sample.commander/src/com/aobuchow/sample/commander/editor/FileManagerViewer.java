@@ -41,6 +41,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.undo.MoveResourcesOperation;
 import org.eclipse.ui.ide.undo.WorkspaceUndoUtil;
+import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 import com.aobuchow.sample.commander.Activator;
 import com.aobuchow.sample.commander.Images;
@@ -84,16 +85,16 @@ public class FileManagerViewer extends TableViewer {
 			@Override
 			public Image getImage(Object element) {
 				if (element instanceof AudioFile) {
-					return Activator.imageDescriptorFromPlugin(Activator.PLUGIN_ID, Images.AUDIO_FILE).createImage();
+					return AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, Images.AUDIO_FILE).createImage();
 				}
 				if (element instanceof IContainer) {
-					return Activator.imageDescriptorFromPlugin(Activator.PLUGIN_ID, Images.FOLDER).createImage();
+					return AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, Images.FOLDER).createImage();
 				}
 				return null;
 			}
 		});
 
-		TableViewerColumn sizeColumn = createColumnFor(this, Messages.FileManagerViewer_ColumnText_Size, 100);
+		TableViewerColumn sizeColumn = createColumnFor(this, Messages.FileManagerViewer_ColumnText_Size, 75);
 		sizeColumn.getColumn().setAlignment(SWT.RIGHT);
 		sizeColumn.setLabelProvider(new ColumnLabelProvider() {
 			@Override
