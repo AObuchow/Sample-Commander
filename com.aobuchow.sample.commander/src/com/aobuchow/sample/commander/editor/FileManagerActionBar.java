@@ -9,6 +9,7 @@ public class FileManagerActionBar extends EditorActionBarContributor {
 	private IEditorPart editor;
 	private FlatDirectoryLayoutAction flatDirectory;
 	private AutoPlayToggleAction autoPlay;
+	private ShowAllFilesAction showAllFiles;
 
 	@Override
 	public void setActiveEditor(IEditorPart targetEditor) {
@@ -27,6 +28,8 @@ public class FileManagerActionBar extends EditorActionBarContributor {
 		autoPlay = new AutoPlayToggleAction();
 		toolBarManager.add(flatDirectory);
 		toolBarManager.add(autoPlay);
+		showAllFiles = new ShowAllFilesAction();
+		toolBarManager.add(showAllFiles);
 		super.contributeToToolBar(toolBarManager);
 	}
 

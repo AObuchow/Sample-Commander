@@ -14,6 +14,9 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+import com.aobuchow.sample.commander.Activator;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 
 import com.aobuchow.sample.commander.AudioPlayer;
@@ -95,11 +98,15 @@ public class FileManagerContentProvider implements IStructuredContentProvider {
 	}
 
 	public static Object resourceConverter(IResource resource) {
-		// We only want audio files and directories
-		// TODO: Add a toggle for this (issue #40)
+		// We only want audio files and directories unless showAllFiles preference is true
 		if (resource.getType() == IResource.FOLDER) {
 			return Adapters.adapt(resource, IFolder.class);
 		} else if (resource.getType() == IResource.FILE) {
+			IEclipsePreferences prefs = InstanceScope.INSTANCE.getNode(Activator.PREFERENCES_NODE_QUALIFER);
+			boolean showAllFiles = prefs.getBoolean(ShowAllFilesAction.SHOW_ALL_FILES_PREFERENCE_KEY, false);
+			if (showAllFiles) {
+				return resource;
+			}
 			AudioFile file = new AudioFile(resource);
 			if (AudioPlayer.canPlay(file)) {
 				return file;
